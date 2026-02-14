@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="white">
-    <title>예약 관리자 (현장팀)</title>
+    <title>예약 관리자 (공연장 수령)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
     <style>
@@ -196,6 +196,7 @@
                     <button onclick="setModelFilter('23U')" class="chip-btn model-filter-item" data-model="23U">23U</button>
                     <button onclick="setModelFilter('24U')" class="chip-btn model-filter-item" data-model="24U">24U</button>
                     <button onclick="setModelFilter('25U')" class="chip-btn model-filter-item" data-model="25U">25U</button>
+                    <button onclick="setModelFilter('26U')" class="chip-btn model-filter-item" data-model="26U">26U</button>
                     <button onclick="setModelFilter('17P')" class="chip-btn model-filter-item" data-model="17P">17P</button>
                     <button onclick="setModelFilter('17PM')" class="chip-btn model-filter-item" data-model="17PM">17PM</button>
                     <button onclick="setModelFilter('백업')" class="chip-btn model-filter-item" data-model="백업">백업</button>
@@ -271,6 +272,7 @@
                                     <button type="button" onclick="selectEditModel('23U')" class="model-select-chip" data-val="23U">23U</button>
                                     <button type="button" onclick="selectEditModel('24U')" class="model-select-chip" data-val="24U">24U</button>
                                     <button type="button" onclick="selectEditModel('25U')" class="model-select-chip" data-val="25U">25U</button>
+                                    <button type="button" onclick="selectEditModel('26U')" class="model-select-chip" data-val="26U">26U</button>
                                     <button type="button" onclick="selectEditModel('17P')" class="model-select-chip" data-val="17P">17P</button>
                                     <button type="button" onclick="selectEditModel('17PM')" class="model-select-chip" data-val="17PM">17PM</button>
                                     <button type="button" onclick="selectEditModel('백업')" class="model-select-chip" data-val="백업">백업</button>
@@ -361,7 +363,7 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbyDsU0D8lzob5uA5abTkbC2camJ9yhlZHIRxBhov-njJRNyE3EV5eUrSFROgK-tT9u1sw/exec"; 
         
         // 모델명 목록
-        const MODEL_LIST = ['23U', '24U', '25U', '17P', '17PM', '백업', '연장'];
+        const MODEL_LIST = ['23U', '24U', '25U', '26U', '17P', '17PM', '백업', '연장'];
 
         let allData = [];
         // [수정] 공연장 모드 전용 필터 기본값 설정
@@ -544,12 +546,13 @@
         }
 
         function updateModelButtonCounts(dataset) {
-            const counts = { '23U':0, '24U':0, '25U':0, '17P':0, '17PM':0, 'all': dataset.length, 'BACKUP':0, 'EXT':0 };
+            const counts = { '23U':0, '24U':0, '25U':0, '26U':0, '17P':0, '17PM':0, 'all': dataset.length, 'BACKUP':0, 'EXT':0 };
             dataset.forEach(item => {
                 let model = (item.model || '').toUpperCase();
                 if(model.includes('23U')) counts['23U']++;
                 else if(model.includes('24U')) counts['24U']++;
                 else if(model.includes('25U')) counts['25U']++;
+                else if(model.includes('26U')) counts['26U']++;
                 else if(model.includes('17P') && !model.includes('17PM')) counts['17P']++; 
                 else if(model.includes('17PM')) counts['17PM']++;
                 
@@ -557,14 +560,28 @@
                 if(model.includes('연장')) counts['EXT']++;
             });
             document.querySelector('[data-model="all"]').innerText = `전체(${counts.all})`;
-            ['23U', '24U', '25U', '17P', '17PM'].forEach(m => {
+            
+            ['23U', '24U', '25U', '26U', '17P', '17PM'].forEach(m => {
                 const btn = document.querySelector(`[data-model="${m}"]`);
-                if(btn) btn.innerText = `${m}(${counts[m]})`;
+                if(btn) {
+                    btn.innerText = `${m}(${counts[m]})`;
+                    // [수정] 개수가 0이면 숨김 처리
+                    if(counts[m] === 0) btn.classList.add('hidden');
+                    else btn.classList.remove('hidden');
+                }
             });
             const backupBtn = document.querySelector('[data-model="백업"]');
-            if(backupBtn) backupBtn.innerText = `백업(${counts['BACKUP']})`;
+            if(backupBtn) {
+                backupBtn.innerText = `백업(${counts['BACKUP']})`;
+                if(counts['BACKUP'] === 0) backupBtn.classList.add('hidden');
+                else backupBtn.classList.remove('hidden');
+            }
             const extBtn = document.querySelector('[data-model="연장"]');
-            if(extBtn) extBtn.innerText = `연장(${counts['EXT']})`;
+            if(extBtn) {
+                extBtn.innerText = `연장(${counts['EXT']})`;
+                if(counts['EXT'] === 0) extBtn.classList.add('hidden');
+                else extBtn.classList.remove('hidden');
+            }
         }
 
         function renderList(list) {
