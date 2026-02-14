@@ -28,11 +28,7 @@
             width: 100%;
         }
 
-        /* 모달 오픈 시 배경 고정 */
-        body.modal-open { 
-            overflow: hidden;
-            height: 100vh;
-        }
+        body.modal-open { overflow: hidden; height: 100vh; position: fixed; width: 100%; }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -42,12 +38,11 @@
             border: 1px solid var(--border);
             border-radius: 16px; 
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-            transition: all 0.15s ease;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
         .card:active { background-color: #F1F5F9; border-color: #CBD5E1; transform: scale(0.97); }
 
-        /* 상태 뱃지 스타일 */
         .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; line-height: 1; height: 20px; border: 1px solid transparent; }
         .status-wait { background-color: #F0F9FF; color: #0284C7; border-color: #BAE6FD; }
         .status-confirm { background-color: #ECFDF5; color: #059669; border-color: #A7F3D0; }
@@ -60,58 +55,27 @@
             border-bottom: 1px solid var(--border);
         }
 
-        /* 상세 정보 모달 (바텀 시트) - 가로 밀림 해결 구조 */
-        #modal-root {
-            position: fixed;
-            inset: 0;
-            z-index: 200;
-            display: none; /* 초기 상태 */
-        }
-        #modal-root.active {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-        }
+        #modal-root { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 200; display: none; justify-content: flex-end; flex-direction: column; align-items: center; }
+        #modal-root.active { display: flex; }
         
-        .modal-overlay {
-            position: absolute;
-            inset: 0;
-            background-color: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(2px);
-        }
+        .modal-overlay { position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); }
 
         .bottom-sheet {
-            position: relative;
-            width: 100%;
-            max-width: 28rem; /* max-w-md와 동일 */
-            background-color: #FFFFFF;
-            border-top-left-radius: 28px;
-            border-top-right-radius: 28px;
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 210;
+            position: relative; width: 100%; max-width: 28rem; background-color: #FFFFFF;
+            border-top-left-radius: 28px; border-top-right-radius: 28px; height: 88vh;
+            display: flex; flex-direction: column; transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 210;
         }
         #modal-root.active .bottom-sheet { transform: translateY(0); }
 
-        .scroll-area { 
-            flex: 1; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-            padding: 20px;
-        }
+        .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; }
 
-        /* 폼 요소 스타일 */
         .form-section { background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
         .form-title { font-size: 13px; font-weight: 800; color: #1E293B; margin-bottom: 12px; display: flex; align-items: center; }
         .form-title::before { content: ''; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
-        
         .input-label { display: block; font-size: 11px; font-weight: 700; color: #64748B; margin-bottom: 5px; margin-left: 2px; }
         .input-field { width: 100%; padding: 12px; background: white; border: 1px solid #E2E8F0; border-radius: 10px; font-size: 14px; font-weight: 600; outline: none; }
-        .input-field:focus { border-color: var(--primary); }
+        .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
 
         .status-btn { border: 1px solid #E2E8F0; background: white; font-size: 12px; font-weight: 600; color: #64748B; padding: 12px 0; border-radius: 10px; transition: all 0.2s; }
         .status-btn.active-wait { background: #F0F9FF; border-color: #7DD3FC; color: #0284C7; font-weight: 800; }
@@ -119,61 +83,152 @@
         .status-btn.active-return { background: #F8FAFC; border-color: #94A3B8; color: #334155; font-weight: 800; }
         .status-btn.active-cancel { background: #FEF2F2; border-color: #FCA5A5; color: #DC2626; font-weight: 800; }
 
-        .filter-btn { border: 1px solid var(--border); background: white; color: var(--text-sub); transition: all 0.1s; font-family: "Pretendard Variable", sans-serif; }
-        .filter-btn.active { background: #1E293B; color: white; border-color: #1E293B; }
-        .venue-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .chip-btn { 
+            border: 1px solid var(--border); 
+            background: white; 
+            color: var(--text-sub); 
+            transition: all 0.1s; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            font-weight: 700; 
+            padding: 6px 12px; 
+            white-space: nowrap; 
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px;
+        }
+        .chip-btn.active { background: #1E293B; color: white; border-color: #1E293B; }
+        .venue-active-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .header-input { height: 46px; display: flex; align-items: center; background: white; border: 1px solid #E2E8F0; border-radius: 12px; }
+        /* [NEW] 모델 선택 칩 스타일 */
+        .model-select-chip {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            background: white;
+            color: #64748B;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .model-select-chip.active {
+            background: #1E293B;
+            color: white;
+            border-color: #1E293B;
+        }
+
+        .sort-btn { 
+            border: 1px solid var(--border); 
+            background: white; 
+            color: var(--text-sub); 
+            transition: all 0.1s; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            padding: 8px 12px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .sort-btn.active { background: #1E293B; color: white; border-color: #1E293B; }
+        
+        .header-input-box { height: 44px; display: flex; align-items: center; background: white; border: 1px solid #E2E8F0; border-radius: 14px; transition: all 0.2s; }
+        .header-input-box:active { background: #F8FAFC; transform: scale(0.98); }
+
+        /* 캘린더 스타일 */
+        #calendar-modal-root { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 300; display: none; justify-content: flex-end; flex-direction: column; align-items: center; }
+        #calendar-modal-root.active { display: flex; }
+        .calendar-sheet {
+            position: relative; width: 100%; max-width: 28rem; background-color: #FFFFFF;
+            border-top-left-radius: 28px; border-top-right-radius: 28px; padding-bottom: env(safe-area-inset-bottom);
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 310;
+        }
+        #calendar-modal-root.active .calendar-sheet { transform: translateY(0); }
+        .cal-day-cell { height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; border-radius: 12px; transition: all 0.1s; }
+        .cal-day-cell:active { background-color: #F1F5F9; }
+        .cal-day-today { color: var(--primary); font-weight: 800; position: relative; }
+        .cal-day-today::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: var(--primary); border-radius: 50%; }
+        .cal-day-selected { background-color: var(--primary) !important; color: white !important; font-weight: 800; }
+        .cal-day-selected::after { display: none; }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen relative pb-safe">
 
     <!-- 1. 헤더 영역 -->
-    <header class="sticky top-0 z-30 header-fixed pt-safe">
+    <header class="sticky top-0 z-30 header-fixed pt-safe bg-white/95">
         <div class="px-4 pt-4 pb-3">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3">
-                    <h1 class="text-[22px] font-black text-slate-900 tracking-tighter">예약 관리</h1>
-                    <button id="venue-toggle" onclick="toggleVenueMode()" 
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border border-slate-200 bg-white text-slate-500 active:bg-slate-50 transition-colors shadow-sm">
-                        <span id="venue-dot" class="w-2 h-2 rounded-full bg-slate-300 transition-colors"></span>
-                        공연장모드
-                    </button>
+            <!-- [ROW 1] 검색바 / 공연장모드 / 새로고침 -->
+            <div class="flex items-center gap-2 mb-3">
+                <!-- 검색바 -->
+                <div class="flex-1 relative h-[44px] bg-slate-50 border border-slate-200 rounded-xl flex items-center px-3 transition-all focus-within:bg-white focus-within:border-blue-400 shadow-sm">
+                    <svg class="text-slate-400 mr-2 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="search-input" onkeyup="filterData()" placeholder="이름/번호/수령" class="w-full bg-transparent border-none text-[13px] font-bold text-slate-900 placeholder-slate-400 outline-none p-0 h-full">
                 </div>
-                <button onclick="fetchData()" class="p-2.5 bg-slate-100 rounded-xl text-slate-600 active:bg-slate-200 border border-slate-200">
+
+                <!-- 공연장 버튼 -->
+                <button id="venue-toggle" onclick="toggleVenueMode()" 
+                    class="w-[120px] flex items-center justify-center h-[44px] px-3 rounded-xl text-[11px] font-extrabold border border-slate-200 bg-white text-slate-500 active:bg-slate-50 transition-colors shadow-sm shrink-0 whitespace-nowrap">
+                    <span id="venue-dot" class="w-2 h-2 rounded-full bg-slate-300 mr-2 transition-colors"></span>
+                    공연장 모드
+                </button>
+
+                <!-- 새로고침 버튼 -->
+                <button onclick="fetchData()" class="w-[44px] h-[44px] flex items-center justify-center bg-slate-50 rounded-xl text-slate-600 active:bg-slate-200 transition-all border border-slate-200 shadow-sm shrink-0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
                 </button>
             </div>
 
-            <div class="flex gap-2 mb-3">
-                <div class="flex-[1.8] relative header-input px-3">
-                    <div class="text-slate-400 mr-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
-                    <input type="text" id="search-input" onkeyup="filterData()" placeholder="이름 또는 연락처" class="w-full bg-transparent border-none text-[14px] font-bold text-slate-900 placeholder-slate-400 outline-none">
+            <!-- 날짜 선택 바 (숨겨짐) -->
+            <input type="date" id="filter-date" class="hidden">
+            
+            <!-- 날짜 선택 표시 바 (선택 시 노출) -->
+            <div id="active-date-bar" class="hidden mb-3 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl flex justify-between items-center animate-slide-up-sm">
+                <div onclick="openCalendar()" class="flex items-center gap-1.5 text-blue-600 text-xs font-bold cursor-pointer flex-1">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span id="active-date-text"></span>
                 </div>
-                <div class="flex-1 relative header-input px-3">
-                    <div class="text-slate-500 mr-2 flex-shrink-0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-                    <span id="date-display" class="text-[13px] font-bold text-slate-600 truncate tracking-tighter">날짜 선택</span>
-                    <input type="date" id="filter-date" onchange="handleDateChange()" class="absolute inset-0 opacity-0 z-10 cursor-pointer">
-                    <button onclick="clearDate()" id="clear-date-btn" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 bg-slate-400 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] z-20">✕</button>
-                </div>
+                <button onclick="clearDate(event)" class="text-blue-400 hover:text-blue-600 font-bold text-[10px] px-2 py-1 bg-white rounded-lg border border-blue-100">초기화</button>
             </div>
+            
+            <div class="flex flex-col gap-3">
+                <!-- [ROW 3] 기종 필터 -->
+                <div id="model-filters" class="flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
+                    <button onclick="setModelFilter('all')" class="chip-btn model-filter-item active" data-model="all">전체</button>
+                    <button onclick="setModelFilter('23U')" class="chip-btn model-filter-item" data-model="23U">23U</button>
+                    <button onclick="setModelFilter('24U')" class="chip-btn model-filter-item" data-model="24U">24U</button>
+                    <button onclick="setModelFilter('25U')" class="chip-btn model-filter-item" data-model="25U">25U</button>
+                    <button onclick="setModelFilter('17P')" class="chip-btn model-filter-item" data-model="17P">17P</button>
+                    <button onclick="setModelFilter('17PM')" class="chip-btn model-filter-item" data-model="17PM">17PM</button>
+                    <button onclick="setModelFilter('백업')" class="chip-btn model-filter-item" data-model="백업">백업</button>
+                    <button onclick="setModelFilter('연장')" class="chip-btn model-filter-item" data-model="연장">연장</button>
+                </div>
 
-            <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-                <div class="relative shrink-0">
-                    <select id="filter-model" onchange="filterData()" class="appearance-none bg-white border border-slate-300 text-slate-800 text-[12px] font-extrabold py-2 pl-3 pr-8 rounded-xl focus:outline-none shadow-sm">
-                        <option value="all">📱 전체 기종</option>
-                    </select>
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[9px] pointer-events-none">▼</span>
+                <!-- [ROW 4] 정렬 필터 + 날짜 버튼 & 공연장 상세 필터 -->
+                <!-- 일반 모드 -->
+                <div id="normal-filters" class="flex gap-2">
+                    <button onclick="setSort('time')" class="sort-btn active flex-1" id="sort-btn-time">
+                        <span class="mr-1">🕒</span> 최신순
+                    </button>
+                    <button onclick="setSort('model')" class="sort-btn flex-1" id="sort-btn-model">
+                        <span class="mr-1">📱</span> 기종순
+                    </button>
+                    <button onclick="openCalendar()" class="sort-btn flex-1" id="btn-date-select">
+                        <span class="mr-1">📅</span> 날짜
+                    </button>
                 </div>
-                <div class="w-px h-5 bg-slate-200 shrink-0"></div>
-                <div id="normal-filters" class="flex gap-1.5">
-                    <button onclick="setFilter('all')" class="filter-btn active px-3.5 py-2 rounded-xl text-[12px] font-extrabold" data-val="all">전체</button>
-                    <button onclick="setFilter('예약신청')" class="filter-btn px-3.5 py-2 rounded-xl text-[12px] font-bold" data-val="예약신청">신청</button>
-                    <button onclick="setFilter('확정')" class="filter-btn px-3.5 py-2 rounded-xl text-[12px] font-bold" data-val="확정">확정</button>
-                </div>
-                <div id="venue-filters" class="hidden flex gap-1.5">
-                    <button id="btn-venue-rem" onclick="setFilter('venue_remaining')" class="venue-btn active filter-btn px-3.5 py-2 rounded-xl text-[12px] font-extrabold" data-val="venue_remaining">남은 0</button>
-                    <button id="btn-venue-pick" onclick="setFilter('venue_pickedup')" class="venue-btn filter-btn px-3.5 py-2 rounded-xl text-[12px] font-bold" data-val="venue_pickedup">수령 0</button>
+
+                <!-- [수정] 공연장 모드 필터: 남은인원 / 수령인원 / 날짜선택 -->
+                <div id="venue-filters" class="hidden flex gap-1.5 w-full">
+                    <button id="btn-venue-rem" onclick="setVenueFilter('venue_remaining')" class="chip-btn venue-active-btn active flex-1 text-[12px]" data-val="venue_remaining">남은 0</button>
+                    <button id="btn-venue-pick" onclick="setVenueFilter('venue_pickedup')" class="chip-btn venue-active-btn flex-1 text-[12px]" data-val="venue_pickedup">수령 0</button>
+                    <!-- [NEW] 공연장 모드에서도 날짜 선택 버튼 추가 -->
+                    <button onclick="openCalendar()" class="sort-btn flex-1 text-[12px]" id="btn-venue-date">
+                        <span class="mr-1">📅</span> 날짜
+                    </button>
                 </div>
             </div>
         </div>
@@ -182,41 +237,34 @@
     <!-- 2. 리스트 영역 -->
     <main id="main-content" class="px-4 py-3 pb-32">
         <div id="loading" class="flex flex-col items-center justify-center py-24">
-            <div class="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-            <p class="text-[13px] font-bold text-slate-400">정보를 불러오는 중입니다</p>
+            <div class="w-9 h-9 border-4 border-slate-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-[13px] font-bold text-slate-400">목록을 불러오는 중...</p>
         </div>
-        <div id="list-container" class="space-y-2.5"></div>
+        <div id="list-container" class="space-y-3"></div>
     </main>
 
-    <!-- 3. 상세 정보 모달 루트 -->
+    <!-- 3. 상세 정보 모달 -->
     <div id="modal-root">
         <div class="modal-overlay" onclick="closeModal()"></div>
         <div class="bottom-sheet">
-            <!-- 모달 헤더 -->
-            <div class="px-6 py-5 border-b border-slate-200 flex-none bg-white rounded-t-[28px] flex justify-between items-center">
+            <div class="px-6 py-5 border-b border-slate-200 flex-none bg-white rounded-t-[28px] flex justify-between items-center shadow-sm">
                 <h2 class="text-[19px] font-black text-slate-900 tracking-tight">예약 상세 내용</h2>
                 <button type="button" onclick="closeModal()" class="p-2 bg-slate-100 rounded-full text-slate-500 active:scale-90">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
-
-            <!-- 모달 스크롤 영역 -->
-            <div class="scroll-area">
+            <div class="scroll-area bg-[#F9FAFB]">
                 <form id="edit-form" onsubmit="submitUpdate(event)">
                     <input type="hidden" id="edit-row">
-                    <div class="flex justify-center mb-6">
-                        <span id="display-order-time" class="text-[11px] font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-200">접수: -</span>
-                    </div>
-
-                    <!-- 섹션 1: 고객 정보 -->
+                    
                     <div class="form-section shadow-sm">
-                        <div class="form-title">고객 기본 정보</div>
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="form-title !mb-0">고객 기본 정보</div>
+                            <span id="display-order-time" class="text-[11px] font-bold text-slate-400 font-mono">접수: -</span>
+                        </div>
                         <div class="grid grid-cols-12 gap-3">
-                            <div class="col-span-4">
-                                <label class="input-label">이름</label>
-                                <input type="text" id="edit-name" class="input-field">
-                            </div>
-                            <div class="col-span-8">
+                            <div class="col-span-4 input-group"><label class="input-label">이름</label><input type="text" id="edit-name" class="input-field"></div>
+                            <div class="col-span-8 input-group">
                                 <label class="input-label">연락처</label>
                                 <div class="flex gap-2">
                                     <input type="text" id="edit-phone" class="input-field font-mono">
@@ -228,20 +276,6 @@
                         </div>
                     </div>
 
-                    <!-- 섹션 2: 대여 일정 -->
-                    <div class="form-section shadow-sm">
-                        <div class="form-title">대여 일정 및 방식</div>
-                        <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div><label class="input-label">수령일</label><input type="date" id="edit-start" class="input-field"></div>
-                            <div><label class="input-label">반납일</label><input type="date" id="edit-end" class="input-field"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="input-label">수령 방법</label><input type="text" id="edit-delivery" class="input-field"></div>
-                            <div><label class="input-label">반납 방법</label><input type="text" id="edit-return-way" class="input-field"></div>
-                        </div>
-                    </div>
-
-                    <!-- 섹션 3: 상태 및 기기 -->
                     <div class="form-section shadow-sm">
                         <div class="form-title">상태 및 기기 관리</div>
                         <div class="space-y-4">
@@ -255,11 +289,29 @@
                                     <button type="button" onclick="setEditStatus('취소')" id="btn-status-cancel" class="status-btn">취소</button>
                                 </div>
                             </div>
+
+                            <div>
+                                <label class="input-label">대여 모델 (예약한 기종)</label>
+                                <div class="flex gap-1.5 overflow-x-auto hide-scrollbar pb-1" id="edit-model-list">
+                                    <button type="button" onclick="selectEditModel('23U')" class="model-select-chip" data-val="23U">23U</button>
+                                    <button type="button" onclick="selectEditModel('24U')" class="model-select-chip" data-val="24U">24U</button>
+                                    <button type="button" onclick="selectEditModel('25U')" class="model-select-chip" data-val="25U">25U</button>
+                                    <button type="button" onclick="selectEditModel('17P')" class="model-select-chip" data-val="17P">17P</button>
+                                    <button type="button" onclick="selectEditModel('17PM')" class="model-select-chip" data-val="17PM">17PM</button>
+                                    <button type="button" onclick="selectEditModel('백업')" class="model-select-chip" data-val="백업">백업</button>
+                                    <button type="button" onclick="selectEditModel('기타')" class="model-select-chip" data-val="기타">기타</button>
+                                </div>
+                                <input type="hidden" id="edit-model-type">
+                            </div>
+
                             <div class="flex gap-3">
-                                <div class="flex-[2]"><label class="input-label">배정 기기명</label><input type="text" id="edit-model" placeholder="예: S24U12" class="input-field"></div>
+                                <div class="flex-[2]">
+                                    <label class="input-label">배정 기기 번호 (직접 입력)</label>
+                                    <input type="text" id="edit-device-id" placeholder="예: 12" class="input-field">
+                                </div>
                                 <div class="flex-1">
                                     <label class="input-label">옵션</label>
-                                    <label class="cursor-pointer block h-[46px]">
+                                    <label class="checkbox-wrapper cursor-pointer block h-[46px]">
                                         <input type="checkbox" id="edit-battery" class="hidden">
                                         <div id="battery-box" class="w-full h-full border border-slate-200 rounded-xl flex flex-col items-center justify-center bg-white transition-all">
                                             <span class="text-sm">⚡</span><span class="text-[10px] font-bold text-slate-600">배터리</span>
@@ -271,10 +323,20 @@
                             <div><label class="input-label">메모</label><textarea id="edit-memo" rows="2" placeholder="메모 입력" class="input-field resize-none"></textarea></div>
                         </div>
                     </div>
+
+                    <div class="form-section shadow-sm">
+                        <div class="form-title">대여 일정 및 방식</div>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div><label class="input-label">수령일</label><input type="date" id="edit-start" class="input-field"></div>
+                            <div><label class="input-label">반납일</label><input type="date" id="edit-end" class="input-field"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="input-label">수령 방법</label><input type="text" id="edit-delivery" class="input-field"></div>
+                            <div><label class="input-label">반납 방법</label><input type="text" id="edit-return-way" class="input-field"></div>
+                        </div>
+                    </div>
                 </form>
             </div>
-
-            <!-- 하단 버튼 영역 -->
             <div class="p-5 bg-white border-t border-slate-100 flex gap-3 pb-10">
                 <button type="button" onclick="confirmDelete()" class="w-1/4 bg-red-50 text-red-600 border border-red-100 font-bold py-4 rounded-2xl text-[13px] active:scale-95">삭제</button>
                 <button type="button" onclick="submitUpdate()" id="save-btn" class="w-3/4 bg-blue-600 text-white font-bold py-4 rounded-2xl text-[15px] shadow-lg shadow-blue-100 active:scale-95">수정 완료하기</button>
@@ -282,25 +344,80 @@
         </div>
     </div>
 
-    <!-- 커스텀 알림창 -->
+    <!-- 캘린더 모달 -->
+    <div id="calendar-modal-root">
+        <div class="modal-overlay" onclick="closeCalendar()"></div>
+        <div class="calendar-sheet">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800">수령일 선택</h2>
+                <button onclick="closeCalendar()" class="p-2 -mr-2 text-slate-400"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <button onclick="moveMonth(-1)" class="p-2 text-slate-500 active:bg-slate-100 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+                    <div id="cal-month-title" class="text-xl font-black text-slate-900"></div>
+                    <button onclick="moveMonth(1)" class="p-2 text-slate-500 active:bg-slate-100 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+                </div>
+                <div class="grid grid-cols-7 text-center mb-3">
+                    <div class="text-[11px] font-bold text-red-400">일</div>
+                    <div class="text-[11px] font-bold text-slate-400">월</div>
+                    <div class="text-[11px] font-bold text-slate-400">화</div>
+                    <div class="text-[11px] font-bold text-slate-400">수</div>
+                    <div class="text-[11px] font-bold text-slate-400">목</div>
+                    <div class="text-[11px] font-bold text-slate-400">금</div>
+                    <div class="text-[11px] font-bold text-blue-400">토</div>
+                </div>
+                <div id="cal-grid" class="grid grid-cols-7 gap-y-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 모달 -->
     <div id="alert-modal" class="fixed inset-0 z-[1000] hidden flex items-center justify-center px-8">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onclick="closeAlert()"></div>
         <div class="bg-white w-full max-w-[300px] rounded-3xl p-6 relative z-10 shadow-2xl border border-slate-100 text-center">
             <div id="alert-icon" class="text-3xl mb-3">🔔</div>
             <h3 id="alert-title" class="text-lg font-bold text-slate-800 mb-1">알림</h3>
-            <p id="alert-msg" class="text-sm text-slate-600 mb-6 leading-relaxed"></p>
+            <p id="alert-msg" class="text-sm text-slate-600 mb-6 break-keep leading-relaxed"></p>
             <div id="alert-actions" class="flex flex-col gap-2"></div>
         </div>
     </div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyDsU0D8lzob5uA5abTkbC2camJ9yhlZHIRxBhov-njJRNyE3EV5eUrSFROgK-tT9u1sw/exec"; 
+        
+        // 모델명 목록
+        const MODEL_LIST = ['23U', '24U', '25U', '17P', '17PM', '백업', '연장'];
 
         let allData = [];
         let currentFilter = 'all';
+        let currentModelFilter = 'all';
+        let currentSort = 'time'; 
         let isVenueMode = false;
+        let selectedDate = null; 
+        let calCurrentDate = new Date(); 
 
         window.onload = () => fetchData();
+
+        function navHome() {
+            document.getElementById('search-input').value = '';
+            clearDate();
+            setSort('time');
+            setModelFilter('all');
+            isVenueMode = false;
+            
+            const btn = document.getElementById('venue-toggle');
+            const dot = document.getElementById('venue-dot');
+            const venueFilters = document.getElementById('venue-filters');
+            
+            btn.className = "w-[120px] flex items-center justify-center h-[44px] px-3 rounded-xl text-[11px] font-extrabold border border-slate-200 bg-white text-slate-500 active:bg-slate-50 transition-colors shadow-sm shrink-0 whitespace-nowrap";
+            dot.className = "w-1.5 h-1.5 rounded-full bg-slate-300 mr-1.5 transition-colors";
+            venueFilters.classList.add('hidden');
+            document.getElementById('normal-filters').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            filterData();
+        }
 
         async function fetchData() {
             toggleLoading(true);
@@ -309,16 +426,11 @@
                 const json = await res.json();
                 if(json.result === 'success') {
                     allData = json.data;
-                    initModelFilter();
-                    applyFilters();
-                } else {
-                    showAlert("데이터 로드 실패", "오류", "❌");
-                }
-            } catch(e) {
-                showAlert("네트워크 오류 발생", "연결 실패", "📡");
-            } finally {
-                toggleLoading(false);
-            }
+                    updateModelButtonCounts(allData); 
+                    filterData();
+                } else { showAlert("데이터 로드 실패", "오류", "❌"); }
+            } catch(e) { showAlert("연결 실패", "네트워크 오류", "📡"); } 
+            finally { toggleLoading(false); }
         }
 
         function toggleLoading(show) {
@@ -332,108 +444,227 @@
             isVenueMode = !isVenueMode;
             const btn = document.getElementById('venue-toggle');
             const dot = document.getElementById('venue-dot');
-            const normalFilters = document.getElementById('normal-filters');
             const venueFilters = document.getElementById('venue-filters');
+            const normalFilters = document.getElementById('normal-filters');
 
             if(isVenueMode) {
-                btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border border-blue-500 bg-blue-50 text-blue-600 shadow-sm active:scale-95";
-                dot.className = "w-2 h-2 rounded-full bg-blue-500";
+                // ON
+                btn.className = "w-[120px] flex items-center justify-center h-[44px] px-2 rounded-xl text-[11px] font-extrabold border border-blue-500 bg-blue-50 text-blue-600 shadow-sm active:scale-95 shrink-0 whitespace-nowrap transition-colors";
+                dot.className = "w-2 h-2 rounded-full bg-blue-500 mr-2 transition-colors";
                 normalFilters.classList.add('hidden');
                 venueFilters.classList.remove('hidden');
-                setFilter('venue_remaining');
+                setVenueFilter('venue_remaining'); 
             } else {
-                btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border border-slate-200 bg-white text-slate-500 active:scale-95";
-                dot.className = "w-2 h-2 rounded-full bg-slate-300";
+                // OFF
+                btn.className = "w-[120px] flex items-center justify-center h-[44px] px-2 rounded-xl text-[11px] font-extrabold border border-slate-200 bg-white text-slate-500 active:bg-slate-50 transition-colors shadow-sm shrink-0 whitespace-nowrap";
+                dot.className = "w-2 h-2 rounded-full bg-slate-300 mr-2";
                 venueFilters.classList.add('hidden');
                 normalFilters.classList.remove('hidden');
-                setFilter('all');
+                setSort('time'); 
             }
         }
 
-        function setFilter(val) {
+        function setSort(mode) {
+            currentSort = mode;
+            const timeBtn = document.getElementById('sort-btn-time');
+            const modelBtn = document.getElementById('sort-btn-model');
+            if(mode === 'time') {
+                timeBtn.classList.add('active');
+                modelBtn.classList.remove('active');
+            } else {
+                modelBtn.classList.add('active');
+                timeBtn.classList.remove('active');
+            }
+            filterData();
+        }
+
+        function setVenueFilter(val) {
             currentFilter = val;
-            document.querySelectorAll('.filter-btn, .venue-btn').forEach(btn => {
-                if(btn.dataset.val === val) {
-                    if(isVenueMode) btn.classList.add('active'); // active logic
-                    else btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+            document.querySelectorAll('.venue-active-btn').forEach(btn => {
+                if(btn.dataset.val === val) btn.classList.add('active');
+                else btn.classList.remove('active');
             });
             filterData();
         }
 
-        function handleDateChange() {
-            const dateVal = document.getElementById('filter-date').value;
-            const display = document.getElementById('date-display');
-            const clearBtn = document.getElementById('clear-date-btn');
-            
-            if(dateVal) {
-                const [y,m,d] = dateVal.split('-');
-                display.innerText = `${m}월 ${d}일`;
-                display.classList.add('text-blue-600');
-                clearBtn.classList.remove('hidden');
-            } else {
-                display.innerText = '날짜 선택';
-                display.classList.remove('text-blue-600');
-                clearBtn.classList.add('hidden');
-            }
+        function setModelFilter(model) {
+            currentModelFilter = model;
+            document.querySelectorAll('.model-filter-item').forEach(btn => {
+                if(btn.dataset.model === model) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
             filterData();
         }
 
-        function clearDate() {
-            document.getElementById('filter-date').value = '';
-            handleDateChange();
+        // [CALENDAR]
+        function openCalendar() {
+            calCurrentDate = selectedDate ? new Date(selectedDate) : new Date();
+            renderCalendar();
+            const root = document.getElementById('calendar-modal-root');
+            root.classList.add('active');
+            document.body.classList.add('modal-open');
+        }
+        function closeCalendar() {
+            const root = document.getElementById('calendar-modal-root');
+            root.classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+        function moveMonth(step) {
+            calCurrentDate.setMonth(calCurrentDate.getMonth() + step);
+            renderCalendar();
+        }
+        function renderCalendar() {
+            const year = calCurrentDate.getFullYear();
+            const month = calCurrentDate.getMonth();
+            document.getElementById('cal-month-title').innerText = `${year}년 ${month + 1}월`;
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = '';
+            for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
+            const todayStr = new Date().toISOString().split('T')[0];
+            for(let d=1; d<=lastDate; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                let classes = "cal-day-cell cursor-pointer";
+                if(dateStr === todayStr) classes += " cal-day-today";
+                if(dateStr === selectedDate) classes += " cal-day-selected";
+                const div = document.createElement('div');
+                div.className = classes; div.innerText = d; div.onclick = () => selectDate(dateStr);
+                grid.appendChild(div);
+            }
+        }
+        function selectDate(dateStr) {
+            selectedDate = dateStr;
+            const [y,m,d] = dateStr.split('-');
+            const displayDate = `${parseInt(m)}월 ${parseInt(d)}일`;
+            document.getElementById('active-date-bar').classList.remove('hidden');
+            document.getElementById('active-date-text').innerText = `선택된 날짜: ${displayDate}`;
+            closeCalendar();
+            filterData();
+        }
+        function clearDate(e) {
+            if(e) e.stopPropagation();
+            selectedDate = null;
+            document.getElementById('active-date-bar').classList.add('hidden');
+            filterData();
         }
 
         function filterData() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            const date = document.getElementById('filter-date').value;
-            const model = document.getElementById('filter-model').value;
             let venueRem = 0, venuePick = 0;
 
-            const filtered = allData.filter(item => {
-                const matchQuery = (item.name && item.name.includes(query)) || (item.phone && item.phone.includes(query));
-                let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
-                const matchModel = (model === 'all') || (rawModel.toUpperCase().includes(model));
+            const baseFiltered = allData.filter(item => {
+                const matchQuery = (item.name && item.name.includes(query)) || 
+                                   (item.phone && item.phone.includes(query)) ||
+                                   (item.model && item.model.includes(query)) ||
+                                   (item.delivery && item.delivery.includes(query));
+                
                 let matchDate = true;
-                if(date && item.startDate && item.endDate) matchDate = (date >= item.startDate && date <= item.endDate);
+                if(selectedDate) {
+                    if(!item.startDate) matchDate = false;
+                    else matchDate = (selectedDate === item.startDate);
+                }
 
+                let matchVenue = true;
                 if(isVenueMode) {
                     const delivery = item.delivery || '';
-                    if(!delivery.includes('공연') && !delivery.includes('현장')) return false;
-                    if(matchQuery && matchModel && matchDate) {
-                        if(/\d$/.test(rawModel)) venuePick++; else venueRem++;
-                    }
-                    if(currentFilter === 'venue_remaining' && /\d$/.test(rawModel)) return false;
-                    if(currentFilter === 'venue_pickedup' && !/\d$/.test(rawModel)) return false;
-                } else {
-                    if(currentFilter !== 'all' && item.status !== currentFilter) return false;
+                    if(!delivery.includes('공연') && !delivery.includes('현장')) matchVenue = false;
                 }
-                return matchQuery && matchModel && matchDate;
+
+                return matchQuery && matchDate && matchVenue;
             });
 
-            if(isVenueMode) {
-                document.getElementById('btn-venue-rem').innerText = `남은 ${venueRem}`;
-                document.getElementById('btn-venue-pick').innerText = `수령 ${venuePick}`;
+            updateModelButtonCounts(baseFiltered);
+
+            const finalFiltered = baseFiltered.filter(item => {
+                let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
+                // 데이터 백업 등 모델명이 'all'일때 포함되도록 보완
+                const matchModel = (currentModelFilter === 'all') || (rawModel.toUpperCase().includes(currentModelFilter));
+                
+                if(isVenueMode) {
+                    const isAssigned = /\d$/.test(rawModel);
+                    if(isAssigned) venuePick++; else venueRem++; 
+
+                    if(currentFilter === 'venue_remaining' && isAssigned) return false;
+                    if(currentFilter === 'venue_pickedup' && !isAssigned) return false;
+                }
+                return matchModel;
+            });
+
+            // [정렬 로직]
+            if (currentSort === 'model') {
+                finalFiltered.sort((a, b) => {
+                    const modelA = (a.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim();
+                    const modelB = (b.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim();
+                    return modelA.localeCompare(modelB);
+                });
+            } else {
+                // 예약시간 순 (최신순)
+                finalFiltered.sort((a, b) => {
+                    // 예약시간 없는 경우(수기 입력 등) 대비, id(row) 역순 정렬 우선
+                    if (!a.orderTime || !b.orderTime) return b.row - a.row;
+                    const timeA = new Date(a.orderTime).getTime();
+                    const timeB = new Date(b.orderTime).getTime();
+                    if(timeA !== timeB) return timeB - timeA;
+                    return b.row - a.row; 
+                });
             }
-            renderList(filtered); 
+
+            if(isVenueMode) {
+                 let vR = 0, vP = 0;
+                 const modelFiltered = baseFiltered.filter(item => {
+                    let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
+                    return (currentModelFilter === 'all') || (rawModel.toUpperCase().includes(currentModelFilter));
+                 });
+                 modelFiltered.forEach(item => {
+                    let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
+                    if(/\d$/.test(rawModel)) vP++; else vR++;
+                 });
+                 document.getElementById('btn-venue-rem').innerText = `남은 ${vR}`;
+                 document.getElementById('btn-venue-pick').innerText = `수령 ${vP}`;
+            }
+
+            renderList(finalFiltered); 
+        }
+
+        function updateModelButtonCounts(dataset) {
+            const counts = { '23U':0, '24U':0, '25U':0, '17P':0, '17PM':0, 'all': dataset.length, 'BACKUP':0, 'EXT':0 };
+            dataset.forEach(item => {
+                let model = (item.model || '').toUpperCase();
+                if(model.includes('23U')) counts['23U']++;
+                else if(model.includes('24U')) counts['24U']++;
+                else if(model.includes('25U')) counts['25U']++;
+                else if(model.includes('17P') && !model.includes('17PM')) counts['17P']++; 
+                else if(model.includes('17PM')) counts['17PM']++;
+                
+                if(model.includes('백업')) counts['BACKUP']++;
+                if(model.includes('연장')) counts['EXT']++;
+            });
+            document.querySelector('[data-model="all"]').innerText = `전체(${counts.all})`;
+            ['23U', '24U', '25U', '17P', '17PM'].forEach(m => {
+                const btn = document.querySelector(`[data-model="${m}"]`);
+                if(btn) btn.innerText = `${m}(${counts[m]})`;
+            });
+            const backupBtn = document.querySelector('[data-model="백업"]');
+            if(backupBtn) backupBtn.innerText = `백업(${counts['BACKUP']})`;
+            const extBtn = document.querySelector('[data-model="연장"]');
+            if(extBtn) extBtn.innerText = `연장(${counts['EXT']})`;
         }
 
         function renderList(list) {
             const container = document.getElementById('list-container');
             container.innerHTML = '';
             if(!list || list.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center text-slate-400 text-xs font-medium">내역이 없습니다.</div>`;
+                container.innerHTML = `<div class="py-20 text-center text-slate-400 text-xs font-medium">검색된 내역이 없습니다.</div>`;
                 return;
             }
 
             list.forEach(item => {
-                let badgeClass = 'status-wait';
-                if(item.status === '예약신청') badgeClass = 'status-wait';
-                else if(item.status === '확정') badgeClass = 'status-confirm';
-                else if(item.status === '반납완료') badgeClass = 'status-return';
-                else if(item.status === '취소') badgeClass = 'status-cancel';
+                let badgeClass = 'status-wait', badgeText = '대기';
+                if(item.status === '예약신청') { badgeClass = 'status-badge status-wait'; badgeText = '신청'; }
+                else if(item.status === '확정') { badgeClass = 'status-badge status-confirm'; badgeText = '확정'; }
+                else if(item.status === '반납완료') { badgeClass = 'status-badge status-return'; badgeText = '반납'; }
+                else if(item.status === '취소') { badgeClass = 'status-badge status-cancel'; badgeText = '취소'; }
 
                 const truck = item.trackingNumber ? '<span class="ml-1 text-[10px]">🚚</span>' : '';
                 const memo = item.memo ? '<span class="ml-1 text-[10px] text-orange-500">📝</span>' : '';
@@ -442,6 +673,7 @@
                 const start = (item.startDate || '').substring(5).replace('-','.');
                 const end = (item.endDate || '').substring(5).replace('-','.');
                 const clean = t => (t||'').replace(/수령|반납/g, '').trim();
+                const method = `${clean(item.delivery)}➔${clean(item.returnWay)}`;
                 const time = formatTime(item.orderTime);
 
                 const card = document.createElement('div');
@@ -449,25 +681,25 @@
                 card.onclick = () => openModal(item);
                 
                 card.innerHTML = `
-                    <div class="absolute top-4 right-5 text-[10px] text-slate-300 font-bold tracking-tight">${time}</div>
+                    <div class="absolute top-4 right-5 text-[10px] text-slate-600 font-black tracking-tight">${time}</div>
                     <div class="flex justify-between items-end">
                         <div class="flex-1 min-w-0 pr-2">
                             <div class="flex items-center gap-1.5 mb-1.5">
                                 <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-[5px] font-extrabold text-[12px] border border-slate-200">${displayModel || '미정'}</span>
-                                <span class="text-[16px] font-black text-slate-900 truncate">${item.name}</span>
+                                <span class="text-[16px] font-black text-slate-900 truncate tracking-tight">${item.name}</span>
                                 ${battery}${memo}
                             </div>
-                            <div class="flex items-center text-[11px] text-slate-500 font-medium gap-2">
-                                <span class="font-mono font-bold text-slate-400">${item.phone ? item.phone.substring(item.phone.length-4) : ''}</span>
+                            <div class="flex items-center text-[11px] text-slate-400 font-medium gap-2 pl-0.5">
+                                <span class="font-mono font-bold">${item.phone ? item.phone.substring(item.phone.length-4) : ''}</span>
                                 <span class="w-[1px] h-2.5 bg-slate-200"></span>
-                                <span class="tracking-tighter">${start}~${end}</span>
+                                <span class="tracking-tighter opacity-90">${start}~${end}</span>
                                 <span class="w-[1px] h-2.5 bg-slate-200"></span>
-                                <span class="truncate text-slate-600 font-bold">${clean(item.delivery)}➔${clean(item.returnWay)}</span>
+                                <span class="truncate text-slate-400 font-medium max-w-[120px]">${method}</span>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 shrink-0 pb-0.5">
                             <div class="text-[11px]">${truck}</div>
-                            <span class="status-badge ${badgeClass}">${item.status.substring(0,2)}</span>
+                            <span class="status-badge ${badgeClass}">${badgeText}</span>
                         </div>
                     </div>
                 `;
@@ -475,7 +707,17 @@
             });
         }
 
-        // 모달 제어
+        // [NEW] 모델 파싱 및 선택 로직
+        function selectEditModel(modelName) {
+            document.getElementById('edit-model-type').value = modelName;
+            
+            // UI 업데이트
+            document.querySelectorAll('.model-select-chip').forEach(btn => {
+                if(btn.dataset.val === modelName) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
         function openModal(item) {
             const root = document.getElementById('modal-root');
             document.getElementById('edit-row').value = item.row;
@@ -490,8 +732,27 @@
             document.getElementById('edit-tracking').value = item.trackingNumber || '';
             document.getElementById('edit-memo').value = item.memo || '';
 
-            const hasBattery = (item.model || '').includes('보조배터리');
-            document.getElementById('edit-model').value = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim();
+            // 모델 파싱
+            let rawModel = item.model || '';
+            const hasBattery = rawModel.includes('보조배터리');
+            rawModel = rawModel.replace(/\+?\s*보조배터리/g, '').trim();
+
+            let matchedModel = '기타';
+            let deviceId = rawModel;
+            
+            // 모델 목록에서 매칭되는 것 찾기
+            for (const m of MODEL_LIST) {
+                if (rawModel.toUpperCase().includes(m)) {
+                    matchedModel = m;
+                    deviceId = rawModel.replace(m, '').trim(); // 모델명 뺀 나머지 = 기기번호
+                    break;
+                }
+            }
+
+            // 모델 선택 버튼 초기화
+            selectEditModel(matchedModel);
+            document.getElementById('edit-device-id').value = deviceId;
+
             const batteryCheck = document.getElementById('edit-battery');
             batteryCheck.checked = hasBattery;
             updateBatteryStyle(hasBattery);
@@ -532,12 +793,23 @@
             }
         }
 
-        async function submitUpdate() {
+        async function submitUpdate(e) {
+            if(e) e.preventDefault();
             const btn = document.getElementById('save-btn');
             const originalText = btn.innerText;
             btn.innerText = '저장 중...'; btn.disabled = true;
 
-            let finalModel = document.getElementById('edit-model').value.trim();
+            // [NEW] 모델 + 번호 + 배터리 합치기
+            const modelType = document.getElementById('edit-model-type').value;
+            const deviceId = document.getElementById('edit-device-id').value.trim();
+            
+            let finalModel = '';
+            if (modelType === '기타') {
+                finalModel = deviceId; // 기타면 입력값 그대로 사용
+            } else {
+                finalModel = modelType + deviceId; // 예: 23U + 12 = 23U12
+            }
+            
             if(document.getElementById('edit-battery').checked) finalModel += "+보조배터리";
 
             const payload = {
@@ -550,7 +822,7 @@
             };
 
             try {
-                const response = await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 showAlert("수정이 완료되었습니다.", "성공", "✅");
                 closeModal();
                 setTimeout(fetchData, 500);
@@ -582,16 +854,6 @@
             const m = d.getMonth()+1, da = d.getDate(), h = d.getHours(), mi = String(d.getMinutes()).padStart(2,'0');
             return full ? `${d.getFullYear()}.${m}.${da} ${h}:${mi}` : `${m}.${da} ${h}:${mi}`;
         }
-
-        function initModelFilter() {
-            const sel = document.getElementById('filter-model');
-            while(sel.options.length > 1) sel.remove(1);
-            ['23U','24U','25U','17P','17PM'].forEach(m => {
-                const opt = document.createElement('option'); opt.value = m; opt.text = m; sel.add(opt);
-            });
-        }
-
-        function applyFilters() { filterData(); } 
 
         function showAlert(msg, title, icon) {
             openAlertModal(title, msg, icon, `<button onclick="closeAlert()" class="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl text-[14px]">확인</button>`);
