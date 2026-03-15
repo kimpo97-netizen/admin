@@ -60,11 +60,10 @@
         
         .modal-overlay { position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); }
 
-        /* [수정] 모달 높이를 내용에 맞게 자동(auto)으로 변경하여 스크롤 없이 한눈에 보이게 함 */
         .bottom-sheet {
             position: relative; width: 100%; max-width: 28rem; background-color: #FFFFFF;
             border-top-left-radius: 28px; border-top-right-radius: 28px; 
-            height: auto; max-height: 90vh; /* 높이 자동 조절 */
+            height: auto; max-height: 90vh;
             display: flex; flex-direction: column; transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 210;
         }
@@ -72,7 +71,6 @@
 
         .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; }
 
-        /* [수정] 폼 여백을 줄여 콤팩트하게 변경 */
         .form-section { background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px; padding: 14px; margin-bottom: 12px; }
         .form-title { font-size: 13px; font-weight: 800; color: #1E293B; margin-bottom: 10px; display: flex; align-items: center; }
         .form-title::before { content: ''; width: 3px; height: 12px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
@@ -165,13 +163,11 @@
         <div class="px-4 pt-4 pb-3">
             <!-- [ROW 1] 검색바 / 새로고침 -->
             <div class="flex items-center gap-2 mb-3">
-                <!-- 검색바 -->
                 <div class="flex-1 relative h-[44px] bg-slate-50 border border-slate-200 rounded-xl flex items-center px-3 transition-all focus-within:bg-white focus-within:border-blue-400 shadow-sm">
                     <svg class="text-slate-400 mr-2 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     <input type="text" id="search-input" onkeyup="filterData()" placeholder="이름/번호/수령방법" class="w-full bg-transparent border-none text-[13px] font-bold text-slate-900 placeholder-slate-400 outline-none p-0 h-full">
                 </div>
 
-                <!-- 새로고침 버튼 -->
                 <button onclick="fetchData()" class="w-[44px] h-[44px] flex items-center justify-center bg-slate-50 rounded-xl text-slate-600 active:bg-slate-200 transition-all border border-slate-200 shadow-sm shrink-0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
                 </button>
@@ -199,6 +195,8 @@
                     <button onclick="setModelFilter('26U')" class="chip-btn model-filter-item" data-model="26U">26U</button>
                     <button onclick="setModelFilter('17P')" class="chip-btn model-filter-item" data-model="17P">17P</button>
                     <button onclick="setModelFilter('17PM')" class="chip-btn model-filter-item" data-model="17PM">17PM</button>
+                    <!-- [추가] 배터리 필터 버튼 -->
+                    <button onclick="setModelFilter('배터리')" class="chip-btn model-filter-item" data-model="배터리">⚡배터리</button>
                     <button onclick="setModelFilter('백업')" class="chip-btn model-filter-item" data-model="백업">백업</button>
                     <button onclick="setModelFilter('연장')" class="chip-btn model-filter-item" data-model="연장">연장</button>
                 </div>
@@ -237,7 +235,6 @@
             <div class="scroll-area bg-[#F9FAFB]">
                 <form id="edit-form" onsubmit="submitUpdate(event)">
                     <input type="hidden" id="edit-row">
-                    <!-- 데이터 유지를 위한 히든 필드들 -->
                     <input type="hidden" id="edit-tracking">
                     <input type="hidden" id="edit-start">
                     <input type="hidden" id="edit-end">
@@ -298,7 +295,6 @@
                             </div>
                             <div><label class="input-label">메모</label><textarea id="edit-memo" rows="2" placeholder="메모 입력" class="input-field resize-none"></textarea></div>
                             
-                            <!-- 진행 상태를 맨 아래로 이동 -->
                             <div>
                                 <label class="input-label">진행 상태</label>
                                 <input type="hidden" id="edit-status-val">
@@ -362,27 +358,57 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyvDQyTPynU4oLmJ2OUMo-n5DNRr_r08Mk1LoC2HZuk28DvSD9zuW0XPNixx9UvjirN5w/exec"; 
         
-        // 모델명 목록
         const MODEL_LIST = ['23U', '24U', '25U', '26U', '17P', '17PM', '백업', '연장'];
 
         let allData = [];
-        // [수정] 공연장 모드 전용 필터 기본값 설정
         let currentFilter = 'venue_remaining';
         let currentModelFilter = 'all';
-        // [수정] VenueMode 항상 true
         const isVenueMode = true;
         let selectedDate = null; 
         let calCurrentDate = new Date(); 
 
-        window.onload = () => fetchData();
+        // [추가] 대한민국(KST) 시간 기준 Date 객체 반환
+        function getKSTDateObj() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            return new Date(utc + (9 * 3600000));
+        }
+
+        // [추가] 대한민국(KST) 기준 오늘 날짜 문자열 반환 (YYYY-MM-DD)
+        function getTodayKST() {
+            const kst = getKSTDateObj();
+            const y = kst.getFullYear();
+            const m = String(kst.getMonth() + 1).padStart(2, '0');
+            const d = String(kst.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        // [수정] 페이지 로드 시 KST 기준 오늘 날짜로 기본 설정
+        window.onload = () => {
+            selectedDate = getTodayKST();
+            updateActiveDateUI();
+            fetchData();
+        };
+
+        // [추가] 선택된 날짜 UI 업데이트 함수
+        function updateActiveDateUI() {
+            const bar = document.getElementById('active-date-bar');
+            if(selectedDate) {
+                const [y,m,d] = selectedDate.split('-');
+                const displayDate = `${parseInt(m)}월 ${parseInt(d)}일`;
+                bar.classList.remove('hidden');
+                document.getElementById('active-date-text').innerText = `선택된 날짜: ${displayDate}`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
 
         function navHome() {
             document.getElementById('search-input').value = '';
-            clearDate();
-            // [수정] 초기화 시 공연장 모드 기본값으로 복귀
+            selectedDate = getTodayKST(); // 홈 버튼 시에도 오늘 날짜로 리셋
+            updateActiveDateUI();
             setVenueFilter('venue_remaining');
             setModelFilter('all');
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
             filterData();
         }
@@ -408,7 +434,6 @@
             else { loader.classList.add('hidden'); }
         }
 
-        // [수정] 공연장 모드 전용 필터 설정
         function setVenueFilter(val) {
             currentFilter = val;
             document.querySelectorAll('.venue-active-btn').forEach(btn => {
@@ -429,7 +454,8 @@
 
         // [CALENDAR]
         function openCalendar() {
-            calCurrentDate = selectedDate ? new Date(selectedDate) : new Date();
+            // [수정] 캘린더 초기 진입 시에도 KST 기반으로 로딩
+            calCurrentDate = selectedDate ? new Date(selectedDate + 'T00:00:00') : getKSTDateObj();
             renderCalendar();
             const root = document.getElementById('calendar-modal-root');
             root.classList.add('active');
@@ -453,7 +479,7 @@
             const grid = document.getElementById('cal-grid');
             grid.innerHTML = '';
             for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getTodayKST(); // [수정] KST 기준 오늘
             for(let d=1; d<=lastDate; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 let classes = "cal-day-cell cursor-pointer";
@@ -466,17 +492,14 @@
         }
         function selectDate(dateStr) {
             selectedDate = dateStr;
-            const [y,m,d] = dateStr.split('-');
-            const displayDate = `${parseInt(m)}월 ${parseInt(d)}일`;
-            document.getElementById('active-date-bar').classList.remove('hidden');
-            document.getElementById('active-date-text').innerText = `선택된 날짜: ${displayDate}`;
+            updateActiveDateUI();
             closeCalendar();
             filterData();
         }
         function clearDate(e) {
             if(e) e.stopPropagation();
             selectedDate = null;
-            document.getElementById('active-date-bar').classList.add('hidden');
+            updateActiveDateUI();
             filterData();
         }
 
@@ -496,7 +519,6 @@
                     else matchDate = (selectedDate === item.startDate);
                 }
 
-                // [수정] 항상 공연/현장 필터 적용
                 let matchVenue = true;
                 const delivery = item.delivery || '';
                 if(!delivery.includes('공연') && !delivery.includes('현장')) matchVenue = false;
@@ -507,11 +529,21 @@
             updateModelButtonCounts(baseFiltered);
 
             const finalFiltered = baseFiltered.filter(item => {
-                let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
-                const matchModel = (currentModelFilter === 'all') || (rawModel.toUpperCase().includes(currentModelFilter));
+                let rawModel = (item.model || '').trim();
+                let hasBattery = rawModel.includes('보조배터리');
+                let rawModelNoBat = rawModel.replace(/\s*\+?\s*보조배터리/g, '').trim(); 
                 
-                // [수정] 공연장 모드 로직 (항상 적용)
-                const isAssigned = /\d$/.test(rawModel);
+                // [수정] 보조배터리 전용 필터 로직 추가
+                let matchModel = false;
+                if (currentModelFilter === 'all') {
+                    matchModel = true;
+                } else if (currentModelFilter === '배터리') {
+                    matchModel = hasBattery;
+                } else {
+                    matchModel = rawModelNoBat.toUpperCase().includes(currentModelFilter);
+                }
+                
+                const isAssigned = /\d$/.test(rawModelNoBat);
                 if(isAssigned) venuePick++; else venueRem++; 
 
                 if(currentFilter === 'venue_remaining' && isAssigned) return false;
@@ -520,7 +552,6 @@
                 return matchModel;
             });
 
-            // [수정] 정렬 로직 단순화 (이름/시간순)
             finalFiltered.sort((a, b) => {
                  if (!a.orderTime || !b.orderTime) return b.row - a.row;
                  const timeA = new Date(a.orderTime).getTime();
@@ -529,15 +560,19 @@
                  return b.row - a.row; 
             });
 
-            // [수정] 카운트 업데이트 항상 실행
             let vR = 0, vP = 0;
             const modelFiltered = baseFiltered.filter(item => {
-                let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
-                return (currentModelFilter === 'all') || (rawModel.toUpperCase().includes(currentModelFilter));
+                let rawModel = (item.model || '').trim();
+                let hasBattery = rawModel.includes('보조배터리');
+                let rawModelNoBat = rawModel.replace(/\s*\+?\s*보조배터리/g, '').trim(); 
+                
+                if (currentModelFilter === 'all') return true;
+                if (currentModelFilter === '배터리') return hasBattery;
+                return rawModelNoBat.toUpperCase().includes(currentModelFilter);
             });
             modelFiltered.forEach(item => {
-                let rawModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
-                if(/\d$/.test(rawModel)) vP++; else vR++;
+                let rawModelNoBat = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
+                if(/\d$/.test(rawModelNoBat)) vP++; else vR++;
             });
             document.getElementById('btn-venue-rem').innerText = `남은 인원 ${vR}`;
             document.getElementById('btn-venue-pick').innerText = `수령 인원 ${vP}`;
@@ -546,7 +581,7 @@
         }
 
         function updateModelButtonCounts(dataset) {
-            const counts = { '23U':0, '24U':0, '25U':0, '26U':0, '17P':0, '17PM':0, 'all': dataset.length, 'BACKUP':0, 'EXT':0 };
+            const counts = { '23U':0, '24U':0, '25U':0, '26U':0, '17P':0, '17PM':0, 'all': dataset.length, 'BACKUP':0, 'EXT':0, 'BATTERY':0 };
             dataset.forEach(item => {
                 let model = (item.model || '').toUpperCase();
                 if(model.includes('23U')) counts['23U']++;
@@ -558,6 +593,8 @@
                 
                 if(model.includes('백업')) counts['BACKUP']++;
                 if(model.includes('연장')) counts['EXT']++;
+                // [추가] 배터리 카운트 체크
+                if(model.includes('보조배터리')) counts['BATTERY']++;
             });
             document.querySelector('[data-model="all"]').innerText = `전체(${counts.all})`;
             
@@ -565,7 +602,6 @@
                 const btn = document.querySelector(`[data-model="${m}"]`);
                 if(btn) {
                     btn.innerText = `${m}(${counts[m]})`;
-                    // [수정] 개수가 0이면 숨김 처리
                     if(counts[m] === 0) btn.classList.add('hidden');
                     else btn.classList.remove('hidden');
                 }
@@ -582,6 +618,13 @@
                 if(counts['EXT'] === 0) extBtn.classList.add('hidden');
                 else extBtn.classList.remove('hidden');
             }
+            // [추가] 배터리 버튼 텍스트 업데이트
+            const batteryBtn = document.querySelector('[data-model="배터리"]');
+            if(batteryBtn) {
+                batteryBtn.innerText = `⚡배터리(${counts['BATTERY']})`;
+                if(counts['BATTERY'] === 0) batteryBtn.classList.add('hidden');
+                else batteryBtn.classList.remove('hidden');
+            }
         }
 
         function renderList(list) {
@@ -593,16 +636,16 @@
             }
 
             list.forEach(item => {
-                let badgeClass = 'status-wait', badgeText = '대기';
-                // [수정] 상태 아이콘(배지) 삭제를 위해 변수 미사용
-                // if(item.status === '예약신청') ... (삭제됨)
-
-                // [수정] 송장(트럭) 아이콘 삭제
-                // const truck = item.trackingNumber ? ... (삭제됨)
-                
                 const memo = item.memo ? '<span class="ml-1 text-[10px] text-orange-500">📝</span>' : '';
                 let displayModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim();
                 let battery = item.model && item.model.includes('보조배터리') ? '<span class="text-amber-500 text-[10px] ml-0.5 font-bold">⚡</span>' : '';
+                
+                // [수정] 기기가 배정된 상태(끝자리가 숫자)인지 판별하여 녹색 박스 스타일 지정
+                const isAssigned = /\d$/.test(displayModel);
+                const badgeClass = isAssigned 
+                    ? "bg-emerald-50 text-emerald-600 border-emerald-200" 
+                    : "bg-slate-100 text-slate-600 border-slate-200";
+
                 const start = (item.startDate || '').substring(5).replace('-','.');
                 const end = (item.endDate || '').substring(5).replace('-','.');
                 const clean = t => (t||'').replace(/수령|반납/g, '').trim();
@@ -614,13 +657,12 @@
                 card.className = "card px-5 py-4 relative";
                 card.onclick = () => openModal(item);
                 
-                // [수정] 리스트 아이템 HTML: 트럭 아이콘 및 상태 배지 부분 삭제
                 card.innerHTML = `
                     <div class="absolute top-4 right-5 text-[10px] text-slate-600 font-black tracking-tight">${time}</div>
                     <div class="flex justify-between items-end">
                         <div class="flex-1 min-w-0 pr-2">
                             <div class="flex items-center gap-1.5 mb-0.5">
-                                <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-[5px] font-extrabold text-[12px] border border-slate-200">${displayModel || '미정'}</span>
+                                <span class="${badgeClass} px-1.5 py-0.5 rounded-[5px] font-extrabold text-[12px] border">${displayModel || '미정'}</span>
                                 <span class="text-[16px] font-black text-slate-900 truncate tracking-tight">${item.name}</span>
                                 <span class="text-[13px] font-bold text-slate-400 font-mono pt-[1px]">${lastPhone}</span>
                                 ${battery}${memo}
@@ -637,11 +679,8 @@
             });
         }
 
-        // [NEW] 모델 파싱 및 선택 로직
         function selectEditModel(modelName) {
             document.getElementById('edit-model-type').value = modelName;
-            
-            // UI 업데이트
             document.querySelectorAll('.model-select-chip').forEach(btn => {
                 if(btn.dataset.val === modelName) btn.classList.add('active');
                 else btn.classList.remove('active');
@@ -662,7 +701,6 @@
             document.getElementById('edit-tracking').value = item.trackingNumber || '';
             document.getElementById('edit-memo').value = item.memo || '';
 
-            // 모델 파싱
             let rawModel = item.model || '';
             const hasBattery = rawModel.includes('보조배터리');
             rawModel = rawModel.replace(/\+?\s*보조배터리/g, '').trim();
@@ -670,16 +708,14 @@
             let matchedModel = '기타';
             let deviceId = rawModel;
             
-            // 모델 목록에서 매칭되는 것 찾기
             for (const m of MODEL_LIST) {
                 if (rawModel.toUpperCase().includes(m)) {
                     matchedModel = m;
-                    deviceId = rawModel.replace(m, '').trim(); // 모델명 뺀 나머지 = 기기번호
+                    deviceId = rawModel.replace(m, '').trim(); 
                     break;
                 }
             }
 
-            // 모델 선택 버튼 초기화
             selectEditModel(matchedModel);
             document.getElementById('edit-device-id').value = deviceId;
 
@@ -727,23 +763,24 @@
             if(e) e.preventDefault();
             const btn = document.getElementById('save-btn');
             const originalText = btn.innerText;
-            btn.innerText = '저장 중...'; btn.disabled = true;
+            btn.innerText = '반영 중...'; btn.disabled = true;
 
-            // [NEW] 모델 + 번호 + 배터리 합치기
             const modelType = document.getElementById('edit-model-type').value;
             const deviceId = document.getElementById('edit-device-id').value.trim();
             
             let finalModel = '';
             if (modelType === '기타') {
-                finalModel = deviceId; // 기타면 입력값 그대로 사용
+                finalModel = deviceId; 
             } else {
-                finalModel = modelType + deviceId; // 예: 23U + 12 = 23U12
+                finalModel = modelType + deviceId; 
             }
             
             if(document.getElementById('edit-battery').checked) finalModel += "+보조배터리";
 
+            const rowId = document.getElementById('edit-row').value;
+
             const payload = {
-                type: 'update', row: document.getElementById('edit-row').value,
+                type: 'update', row: rowId,
                 name: document.getElementById('edit-name').value, phone: document.getElementById('edit-phone').value,
                 startDate: document.getElementById('edit-start').value, endDate: document.getElementById('edit-end').value,
                 delivery: document.getElementById('edit-delivery').value, returnWay: document.getElementById('edit-return-way').value,
@@ -751,28 +788,68 @@
                 model: finalModel, memo: document.getElementById('edit-memo').value
             };
 
+            // 0. 실패 시 롤백(원상복구)을 위한 기존 데이터 백업
+            const rowIndex = allData.findIndex(item => item.row == rowId);
+            let backupItem = null;
+            if(rowIndex !== -1) {
+                backupItem = { ...allData[rowIndex] }; // 데이터 깊은 복사
+            }
+
+            // 1. 낙관적 업데이트: 화면(로컬 데이터)을 먼저 즉시 수정합니다.
+            if(rowIndex !== -1) {
+                allData[rowIndex] = { 
+                    ...allData[rowIndex], 
+                    ...payload, 
+                    trackingNumber: payload.tracking // payload의 tracking을 기존 키값에 맞춤
+                };
+            }
+
+            // 2. 수정된 데이터로 즉시 화면 다시 그리기 (대기 시간 없음)
+            filterData();
+            showAlert("수정이 화면에 반영되었습니다.", "성공", "✅");
+            closeModal();
+            btn.innerText = originalText; btn.disabled = false;
+
+            // 3. 백그라운드에서 구글 시트로 데이터 전송 (await를 사용해 통신 실패 감지)
             try {
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                showAlert("수정이 완료되었습니다.", "성공", "✅");
-                closeModal();
-                setTimeout(fetchData, 500);
             } catch(err) {
-                showAlert("저장에 실패했습니다.", "오류", "❌");
-            } finally {
-                btn.innerText = originalText; btn.disabled = false;
+                console.error("서버 저장 실패", err);
+                // 4. 네트워크 연결 끊김 등 전송 실패 시: 원래 데이터로 롤백
+                if(backupItem && rowIndex !== -1) {
+                    allData[rowIndex] = backupItem; // 백업해둔 데이터로 덮어쓰기
+                    filterData(); // 화면을 예전 상태로 되돌림
+                    showAlert("인터넷 연결 등 문제로 서버 저장에 실패했습니다.\n변경 사항이 취소되었습니다.", "저장 실패 ⚠️", "📶");
+                }
             }
         }
 
         function confirmDelete() {
             showConfirm("이 예약을 정말 삭제할까요?", async () => {
                 const rowId = document.getElementById('edit-row').value;
+                
+                // 0. 롤백을 위한 기존 데이터 백업
+                const backupItem = allData.find(item => item.row == rowId);
+                
+                // 1. 낙관적 업데이트: 로컬 데이터에서 즉시 삭제
+                allData = allData.filter(item => item.row != rowId);
+                
+                // 2. 화면 즉시 갱신
+                filterData();
+                showAlert("예약이 임시 삭제되었습니다.", "완료", "🗑️");
+                closeModal();
+
+                // 3. 백그라운드 전송
                 try {
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'delete', row: rowId }) });
-                    showAlert("예약이 삭제되었습니다.", "완료", "🗑️");
-                    closeModal();
-                    setTimeout(fetchData, 500);
                 } catch(err) {
-                    showAlert("삭제 실패", "오류", "❌");
+                    console.error("삭제 실패", err);
+                    // 4. 전송 실패 시 롤백
+                    if (backupItem) {
+                        allData.push(backupItem); // 삭제했던 데이터 다시 목록에 추가
+                        filterData(); // 재정렬 및 화면 복구
+                        showAlert("인터넷 연결 등 문제로 서버 삭제에 실패했습니다.\n삭제가 취소되었습니다.", "삭제 실패 ⚠️", "📶");
+                    }
                 }
             });
         }
