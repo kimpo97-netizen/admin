@@ -165,7 +165,7 @@
             <div class="flex items-center gap-2 mb-3">
                 <div class="flex-1 relative h-[44px] bg-slate-50 border border-slate-200 rounded-xl flex items-center px-3 transition-all focus-within:bg-white focus-within:border-blue-400 shadow-sm">
                     <svg class="text-slate-400 mr-2 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="text" id="search-input" onkeyup="filterData()" placeholder="이름/번호/일정명/수령" class="w-full bg-transparent border-none text-[13px] font-bold text-slate-900 placeholder-slate-400 outline-none p-0 h-full">
+                    <input type="text" id="search-input" onkeyup="filterData()" placeholder="이름/번호/일정명/주소/수령" class="w-full bg-transparent border-none text-[13px] font-bold text-slate-900 placeholder-slate-400 outline-none p-0 h-full">
                 </div>
 
                 <button onclick="fetchData()" class="w-[44px] h-[44px] flex items-center justify-center bg-slate-50 rounded-xl text-slate-600 active:bg-slate-200 transition-all border border-slate-200 shadow-sm shrink-0">
@@ -186,6 +186,27 @@
             </div>
             
             <div class="flex flex-col gap-3">
+                <!-- [ROW 2] 수령 위치 필터 (스마트 키워드 매핑 적용) -->
+                <div id="loc-filters" class="flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
+                    <button onclick="setLocFilter('all')" class="chip-btn loc-filter-item active" data-loc="all">전체</button>
+                    <button onclick="setLocFilter('대화역')" class="chip-btn loc-filter-item" data-loc="대화역">대화역</button>
+                    <button onclick="setLocFilter('잠실 종합운동장역')" class="chip-btn loc-filter-item" data-loc="잠실 종합운동장역">잠실 종합운동장역</button>
+                    <button onclick="setLocFilter('안암역')" class="chip-btn loc-filter-item" data-loc="안암역">안암역</button>
+                    <button onclick="setLocFilter('고척')" class="chip-btn loc-filter-item" data-loc="고척">고척</button>
+                    <button onclick="setLocFilter('KSPO')" class="chip-btn loc-filter-item" data-loc="KSPO">KSPO</button>
+                    <button onclick="setLocFilter('인스파이어')" class="chip-btn loc-filter-item" data-loc="인스파이어">인스파이어</button>
+                    <button onclick="setLocFilter('상암')" class="chip-btn loc-filter-item" data-loc="상암">상암</button>
+                    <button onclick="setLocFilter('동대입구역')" class="chip-btn loc-filter-item" data-loc="동대입구역">동대입구역</button>
+                    <button onclick="setLocFilter('봉은사역')" class="chip-btn loc-filter-item" data-loc="봉은사역">봉은사역</button>
+                    <button onclick="setLocFilter('광나루역')" class="chip-btn loc-filter-item" data-loc="광나루역">광나루역</button>
+                    <button onclick="setLocFilter('한강진역')" class="chip-btn loc-filter-item" data-loc="한강진역">한강진역</button>
+                    <button onclick="setLocFilter('아시아드')" class="chip-btn loc-filter-item" data-loc="아시아드">아시아드</button>
+                    <button onclick="setLocFilter('문학경기장')" class="chip-btn loc-filter-item" data-loc="문학경기장">문학경기장</button>
+                    <button onclick="setLocFilter('인천대입구역')" class="chip-btn loc-filter-item" data-loc="인천대입구역">인천대입구역</button>
+                    <button onclick="setLocFilter('킨텍스역')" class="chip-btn loc-filter-item" data-loc="킨텍스역">킨텍스역</button>
+                    <button onclick="setLocFilter('확인필요')" class="chip-btn loc-filter-item bg-orange-50 text-orange-600 border-orange-200" data-loc="확인필요">확인필요</button>
+                </div>
+
                 <!-- [ROW 3] 기종 필터 -->
                 <div id="model-filters" class="flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
                     <button onclick="setModelFilter('all')" class="chip-btn model-filter-item active" data-model="all">전체</button>
@@ -195,13 +216,12 @@
                     <button onclick="setModelFilter('26U')" class="chip-btn model-filter-item" data-model="26U">26U</button>
                     <button onclick="setModelFilter('17P')" class="chip-btn model-filter-item" data-model="17P">17P</button>
                     <button onclick="setModelFilter('17PM')" class="chip-btn model-filter-item" data-model="17PM">17PM</button>
-                    <!-- [추가] 배터리 필터 버튼 -->
                     <button onclick="setModelFilter('배터리')" class="chip-btn model-filter-item" data-model="배터리">⚡배터리</button>
                     <button onclick="setModelFilter('백업')" class="chip-btn model-filter-item" data-model="백업">백업</button>
                     <button onclick="setModelFilter('연장')" class="chip-btn model-filter-item" data-model="연장">연장</button>
                 </div>
 
-                <!-- [ROW 4] 공연장 모드 필터 (항상 표시) -->
+                <!-- [ROW 4] 공연장 모드 필터 -->
                 <div id="venue-filters" class="flex gap-1.5 w-full">
                     <button id="btn-venue-rem" onclick="setVenueFilter('venue_remaining')" class="chip-btn venue-active-btn active flex-1 text-[12px]" data-val="venue_remaining">남은 인원 0</button>
                     <button id="btn-venue-pick" onclick="setVenueFilter('venue_pickedup')" class="chip-btn venue-active-btn flex-1 text-[12px]" data-val="venue_pickedup">수령 인원 0</button>
@@ -359,22 +379,42 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbxDoaIt1VmkNlSGZeNQuhLyCMuLmOUUCycI7JnxRQTqecjcq6bSZH3vbOqtjOfLzIUfPw/exec"; 
         
         const MODEL_LIST = ['23U', '24U', '25U', '26U', '17P', '17PM', '백업', '연장'];
+        
+        // 수령 위치(주소/공연장) 다중 키워드 매핑
+        const LOC_MAP = {
+            '대화역': ['대화', '고양'],
+            '잠실 종합운동장역': ['종합운동장', '잠실', '실내체육관'],
+            '안암역': ['안암', '고려대', '화정'],
+            '고척': ['고척'],
+            'KSPO': ['KSPO', '올림픽', '체조', '티켓링크','핸드볼' ],
+            '인스파이어': ['인스파이어'],
+            '상암': ['상암', '월드컵'],
+            '동대입구역': ['장충'],
+            '봉은사역': ['코엑스'],
+            '광나루역': ['예스24'],
+            '한강진역': ['블루스퀘어'],
+            '아시아드': ['아시아드'],
+            '문학경기장': ['문학경기장'],
+            '인천대입구역': ['송도컨벤시아'],
+            '킨텍스역': ['킨텍스']
+        };
+        const LOC_LIST = Object.keys(LOC_MAP);
+        LOC_LIST.push('확인필요'); // 위치 확인필요 항목 추가
 
         let allData = [];
         let currentFilter = 'venue_remaining';
         let currentModelFilter = 'all';
+        let currentLocFilter = 'all'; 
         const isVenueMode = true;
         let selectedDate = null; 
         let calCurrentDate = new Date(); 
 
-        // [추가] 대한민국(KST) 시간 기준 Date 객체 반환
         function getKSTDateObj() {
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             return new Date(utc + (9 * 3600000));
         }
 
-        // [추가] 대한민국(KST) 기준 오늘 날짜 문자열 반환 (YYYY-MM-DD)
         function getTodayKST() {
             const kst = getKSTDateObj();
             const y = kst.getFullYear();
@@ -383,14 +423,12 @@
             return `${y}-${m}-${d}`;
         }
 
-        // [수정] 페이지 로드 시 KST 기준 오늘 날짜로 기본 설정
         window.onload = () => {
             selectedDate = getTodayKST();
             updateActiveDateUI();
             fetchData();
         };
 
-        // [추가] 선택된 날짜 UI 업데이트 함수
         function updateActiveDateUI() {
             const bar = document.getElementById('active-date-bar');
             if(selectedDate) {
@@ -405,10 +443,11 @@
 
         function navHome() {
             document.getElementById('search-input').value = '';
-            selectedDate = getTodayKST(); // 홈 버튼 시에도 오늘 날짜로 리셋
+            selectedDate = getTodayKST(); 
             updateActiveDateUI();
             setVenueFilter('venue_remaining');
             setModelFilter('all');
+            setLocFilter('all'); 
             window.scrollTo({ top: 0, behavior: 'smooth' });
             filterData();
         }
@@ -420,7 +459,6 @@
                 const json = await res.json();
                 if(json.result === 'success') {
                     allData = json.data;
-                    updateModelButtonCounts(allData); 
                     filterData();
                 } else { showAlert("데이터 로드 실패", "오류", "❌"); }
             } catch(e) { showAlert("연결 실패", "네트워크 오류", "📡"); } 
@@ -452,9 +490,27 @@
             filterData();
         }
 
+        // 수령 위치 필터 선택 함수
+        function setLocFilter(loc) {
+            currentLocFilter = loc;
+            document.querySelectorAll('.loc-filter-item').forEach(btn => {
+                if(btn.dataset.loc === loc) {
+                    btn.classList.add('active');
+                    if (loc === '확인필요') {
+                        btn.classList.remove('bg-orange-50', 'text-orange-600', 'border-orange-200');
+                    }
+                } else {
+                    btn.classList.remove('active');
+                    if (btn.dataset.loc === '확인필요') {
+                        btn.classList.add('bg-orange-50', 'text-orange-600', 'border-orange-200');
+                    }
+                }
+            });
+            filterData();
+        }
+
         // [CALENDAR]
         function openCalendar() {
-            // [수정] 캘린더 초기 진입 시에도 KST 기반으로 로딩
             calCurrentDate = selectedDate ? new Date(selectedDate + 'T00:00:00') : getKSTDateObj();
             renderCalendar();
             const root = document.getElementById('calendar-modal-root');
@@ -479,7 +535,7 @@
             const grid = document.getElementById('cal-grid');
             grid.innerHTML = '';
             for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-            const todayStr = getTodayKST(); // [수정] KST 기준 오늘
+            const todayStr = getTodayKST(); 
             for(let d=1; d<=lastDate; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 let classes = "cal-day-cell cursor-pointer";
@@ -512,7 +568,8 @@
                                    (item.phone && item.phone.includes(query)) ||
                                    (item.model && item.model.includes(query)) ||
                                    (item.delivery && item.delivery.includes(query)) ||
-                                   (item.scheduleName && item.scheduleName.includes(query)); // 일정명 검색 추가
+                                   (item.address && item.address.includes(query)) || 
+                                   (item.scheduleName && item.scheduleName.includes(query)); 
                 
                 let matchDate = true;
                 if(selectedDate) {
@@ -528,13 +585,13 @@
             });
 
             updateModelButtonCounts(baseFiltered);
+            updateLocButtonCounts(baseFiltered);
 
             const finalFiltered = baseFiltered.filter(item => {
                 let rawModel = (item.model || '').trim();
                 let hasBattery = rawModel.includes('보조배터리');
                 let rawModelNoBat = rawModel.replace(/\s*\+?\s*보조배터리/g, '').trim(); 
                 
-                // [수정] 보조배터리 전용 필터 로직 추가
                 let matchModel = false;
                 if (currentModelFilter === 'all') {
                     matchModel = true;
@@ -543,14 +600,38 @@
                 } else {
                     matchModel = rawModelNoBat.toUpperCase().includes(currentModelFilter);
                 }
+
+                // 수령 위치 스마트 매핑 필터 검사
+                let matchLoc = true;
+                if (currentLocFilter !== 'all') {
+                    const targetStr = (item.delivery || '') + ' ' + (item.address || '') + ' ' + (item.scheduleName || '');
+                    
+                    if (currentLocFilter === '확인필요') {
+                        // 모든 지정된 키워드 중 하나라도 매칭되면 '확인필요'에 포함되지 않음
+                        let matchedAny = false;
+                        Object.values(LOC_MAP).forEach(keywords => {
+                            if (keywords.some(kw => targetStr.includes(kw))) {
+                                matchedAny = true;
+                            }
+                        });
+                        if (matchedAny) matchLoc = false;
+                    } else {
+                        const keywords = LOC_MAP[currentLocFilter] || [currentLocFilter];
+                        if (!keywords.some(kw => targetStr.includes(kw))) {
+                            matchLoc = false;
+                        }
+                    }
+                }
                 
                 const isAssigned = /\d$/.test(rawModelNoBat);
-                if(isAssigned) venuePick++; else venueRem++; 
+                if (matchModel && matchLoc) {
+                    if(isAssigned) venuePick++; else venueRem++; 
+                }
 
                 if(currentFilter === 'venue_remaining' && isAssigned) return false;
                 if(currentFilter === 'venue_pickedup' && !isAssigned) return false;
                 
-                return matchModel;
+                return matchModel && matchLoc;
             });
 
             finalFiltered.sort((a, b) => {
@@ -561,22 +642,8 @@
                  return b.row - a.row; 
             });
 
-            let vR = 0, vP = 0;
-            const modelFiltered = baseFiltered.filter(item => {
-                let rawModel = (item.model || '').trim();
-                let hasBattery = rawModel.includes('보조배터리');
-                let rawModelNoBat = rawModel.replace(/\s*\+?\s*보조배터리/g, '').trim(); 
-                
-                if (currentModelFilter === 'all') return true;
-                if (currentModelFilter === '배터리') return hasBattery;
-                return rawModelNoBat.toUpperCase().includes(currentModelFilter);
-            });
-            modelFiltered.forEach(item => {
-                let rawModelNoBat = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim(); 
-                if(/\d$/.test(rawModelNoBat)) vP++; else vR++;
-            });
-            document.getElementById('btn-venue-rem').innerText = `남은 인원 ${vR}`;
-            document.getElementById('btn-venue-pick').innerText = `수령 인원 ${vP}`;
+            document.getElementById('btn-venue-rem').innerText = `남은 인원 ${venueRem}`;
+            document.getElementById('btn-venue-pick').innerText = `수령 인원 ${venuePick}`;
 
             renderList(finalFiltered); 
         }
@@ -594,7 +661,6 @@
                 
                 if(model.includes('백업')) counts['BACKUP']++;
                 if(model.includes('연장')) counts['EXT']++;
-                // [추가] 배터리 카운트 체크
                 if(model.includes('보조배터리')) counts['BATTERY']++;
             });
             document.querySelector('[data-model="all"]').innerText = `전체(${counts.all})`;
@@ -619,13 +685,45 @@
                 if(counts['EXT'] === 0) extBtn.classList.add('hidden');
                 else extBtn.classList.remove('hidden');
             }
-            // [추가] 배터리 버튼 텍스트 업데이트
             const batteryBtn = document.querySelector('[data-model="배터리"]');
             if(batteryBtn) {
                 batteryBtn.innerText = `⚡배터리(${counts['BATTERY']})`;
                 if(counts['BATTERY'] === 0) batteryBtn.classList.add('hidden');
                 else batteryBtn.classList.remove('hidden');
             }
+        }
+
+        function updateLocButtonCounts(dataset) {
+            const counts = { 'all': dataset.length };
+            LOC_LIST.forEach(l => counts[l] = 0);
+            
+            dataset.forEach(item => {
+                const targetStr = (item.delivery || '') + ' ' + (item.address || '') + ' ' + (item.scheduleName || '');
+                let matchedAny = false;
+
+                Object.keys(LOC_MAP).forEach(locKey => {
+                    if (LOC_MAP[locKey].some(kw => targetStr.includes(kw))) {
+                        counts[locKey]++;
+                        matchedAny = true;
+                    }
+                });
+
+                if (!matchedAny) {
+                    counts['확인필요']++;
+                }
+            });
+            
+            const allBtn = document.querySelector('[data-loc="all"]');
+            if (allBtn) allBtn.innerText = `전체(${counts.all})`;
+            
+            LOC_LIST.forEach(l => {
+                const btn = document.querySelector(`[data-loc="${l}"]`);
+                if(btn) {
+                    btn.innerText = `${l}(${counts[l]})`;
+                    if(counts[l] === 0) btn.classList.add('hidden');
+                    else btn.classList.remove('hidden');
+                }
+            });
         }
 
         function renderList(list) {
@@ -641,7 +739,6 @@
                 let displayModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim();
                 let battery = item.model && item.model.includes('보조배터리') ? '<span class="text-amber-500 text-[10px] ml-0.5 font-bold">⚡</span>' : '';
                 
-                // [수정] 기기가 배정된 상태(끝자리가 숫자)인지 판별하여 녹색 박스 스타일 지정
                 const isAssigned = /\d$/.test(displayModel);
                 const badgeClass = isAssigned 
                     ? "bg-emerald-50 text-emerald-600 border-emerald-200" 
@@ -654,7 +751,6 @@
                 const time = formatTime(item.orderTime);
                 const lastPhone = item.phone ? item.phone.substring(item.phone.length-4) : '';
 
-                // 일정명(콘서트/행사명) 배지 추가
                 const scheduleHtml = item.scheduleName ? 
                     `<div class="text-[12px] font-bold text-indigo-500 mt-1 mb-1 pl-0.5 truncate flex items-center gap-1">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg> 
@@ -797,37 +893,32 @@
                 model: finalModel, memo: document.getElementById('edit-memo').value
             };
 
-            // 0. 실패 시 롤백(원상복구)을 위한 기존 데이터 백업
             const rowIndex = allData.findIndex(item => item.row == rowId);
             let backupItem = null;
             if(rowIndex !== -1) {
-                backupItem = { ...allData[rowIndex] }; // 데이터 깊은 복사
+                backupItem = { ...allData[rowIndex] }; 
             }
 
-            // 1. 낙관적 업데이트: 화면(로컬 데이터)을 먼저 즉시 수정합니다.
             if(rowIndex !== -1) {
                 allData[rowIndex] = { 
                     ...allData[rowIndex], 
                     ...payload, 
-                    trackingNumber: payload.tracking // payload의 tracking을 기존 키값에 맞춤
+                    trackingNumber: payload.tracking 
                 };
             }
 
-            // 2. 수정된 데이터로 즉시 화면 다시 그리기 (대기 시간 없음)
             filterData();
             showAlert("정상적으로 등록 되었어요.", "성공", "✅");
             closeModal();
             btn.innerText = originalText; btn.disabled = false;
 
-            // 3. 백그라운드에서 구글 시트로 데이터 전송 (await를 사용해 통신 실패 감지)
             try {
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             } catch(err) {
                 console.error("서버 저장 실패", err);
-                // 4. 네트워크 연결 끊김 등 전송 실패 시: 원래 데이터로 롤백
                 if(backupItem && rowIndex !== -1) {
-                    allData[rowIndex] = backupItem; // 백업해둔 데이터로 덮어쓰기
-                    filterData(); // 화면을 예전 상태로 되돌림
+                    allData[rowIndex] = backupItem; 
+                    filterData(); 
                     showAlert("인터넷 연결 등 문제로 서버 저장에 실패했습니다.\n변경 사항이 취소되었습니다.", "저장 실패 ⚠️", "📶");
                 }
             }
@@ -836,27 +927,21 @@
         function confirmDelete() {
             showConfirm("이 예약을 정말 삭제할까요?", async () => {
                 const rowId = document.getElementById('edit-row').value;
-                
-                // 0. 롤백을 위한 기존 데이터 백업
                 const backupItem = allData.find(item => item.row == rowId);
                 
-                // 1. 낙관적 업데이트: 로컬 데이터에서 즉시 삭제
                 allData = allData.filter(item => item.row != rowId);
                 
-                // 2. 화면 즉시 갱신
                 filterData();
                 showAlert("예약이 임시 삭제되었습니다.", "완료", "🗑️");
                 closeModal();
 
-                // 3. 백그라운드 전송
                 try {
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'delete', row: rowId }) });
                 } catch(err) {
                     console.error("삭제 실패", err);
-                    // 4. 전송 실패 시 롤백
                     if (backupItem) {
-                        allData.push(backupItem); // 삭제했던 데이터 다시 목록에 추가
-                        filterData(); // 재정렬 및 화면 복구
+                        allData.push(backupItem); 
+                        filterData(); 
                         showAlert("인터넷 연결 등 문제로 서버 삭제에 실패했습니다.\n삭제가 취소되었습니다.", "삭제 실패 ⚠️", "📶");
                     }
                 }
