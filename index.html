@@ -735,7 +735,9 @@
             }
 
             list.forEach(item => {
-                const memo = item.memo ? '<span class="ml-1 text-[10px] text-orange-500">📝</span>' : '';
+                // 메모 UI 렌더링 방식 변경: 아이콘 대신 하단에 텍스트 노출
+                const memoHtml = item.memo ? `<div class="text-[11px] text-slate-500 mt-1.5 w-full overflow-hidden text-ellipsis whitespace-nowrap"><span class="mr-1 text-[10px]">📝</span>${item.memo.replace(/\n/g, ' ')}</div>` : '';
+                
                 let displayModel = (item.model || '').replace(/\s*\+?\s*보조배터리/g, '').trim();
                 let battery = item.model && item.model.includes('보조배터리') ? '<span class="text-amber-500 text-[10px] ml-0.5 font-bold">⚡</span>' : '';
                 
@@ -764,12 +766,12 @@
                 card.innerHTML = `
                     <div class="absolute top-4 right-5 text-[10px] text-slate-600 font-black tracking-tight">${time}</div>
                     <div class="flex justify-between items-end">
-                        <div class="flex-1 min-w-0 pr-2">
+                        <div class="flex-1 min-w-0 pr-2 overflow-hidden">
                             <div class="flex items-center gap-1.5 mb-0.5">
                                 <span class="${badgeClass} px-1.5 py-0.5 rounded-[5px] font-extrabold text-[12px] border">${displayModel || '미정'}</span>
                                 <span class="text-[16px] font-black text-slate-900 truncate tracking-tight">${item.name}</span>
                                 <span class="text-[13px] font-bold text-slate-400 font-mono pt-[1px]">${lastPhone}</span>
-                                ${battery}${memo}
+                                ${battery}
                             </div>
                             ${scheduleHtml}
                             <div class="flex items-center text-[11px] text-slate-400 font-medium gap-2 pl-0.5 mt-0.5">
@@ -777,6 +779,7 @@
                                 <span class="w-[1px] h-2.5 bg-slate-200"></span>
                                 <span class="truncate text-slate-400 font-medium max-w-[120px]">${method}</span>
                             </div>
+                            ${memoHtml}
                         </div>
                     </div>
                 `;
