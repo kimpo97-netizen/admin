@@ -8,6 +8,9 @@
     <title>예약 관리자 (공연장 수령)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
+    <!-- Supabase 연동: 아래 두 스크립트로 세린캠 DB에 연결합니다 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="serincam-config.js"></script>
     <style>
         :root {
             --primary: #3B82F6; 
@@ -376,8 +379,13 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxDoaIt1VmkNlSGZeNQuhLyCMuLmOUUCycI7JnxRQTqecjcq6bSZH3vbOqtjOfLzIUfPw/exec"; 
-        
+        // Supabase 클라이언트 초기화 (serincam-config.js의 값 사용)
+        const supabaseClient = window.supabase.createClient(
+            window.SERINCAM_CONFIG.SUPABASE_URL,
+            window.SERINCAM_CONFIG.SUPABASE_ANON_KEY
+        );
+        const RESERVATIONS_TABLE = 'reservations';
+
         const MODEL_LIST = ['23U', '24U', '25U', '26U', '17P', '17PM', '백업', '연장'];
         
         // 수령 위치(주소/공연장) 다중 키워드 매핑
@@ -423,6 +431,18 @@
             return `${y}-${m}-${d}`;
         }
 
+        // DB에 "2026. 07. 04"와 "2026-07-02"처럼 형식이 섞여 저장된 날짜를
+        // 항상 "YYYY-MM-DD"로 통일해서 비교/표시할 수 있게 하는 함수
+        function normalizeDateStr(str) {
+            if (!str) return '';
+            const m = String(str).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+            if (!m) return String(str).trim();
+            const y = m[1];
+            const mo = String(m[2]).padStart(2, '0');
+            const d = String(m[3]).padStart(2, '0');
+            return `${y}-${mo}-${d}`;
+        }
+
         window.onload = () => {
             selectedDate = getTodayKST();
             updateActiveDateUI();
@@ -455,13 +475,23 @@
         async function fetchData() {
             toggleLoading(true);
             try {
-                const res = await fetch(`${API_URL}?type=admin_list`);
-                const json = await res.json();
-                if(json.result === 'success') {
-                    allData = json.data;
-                    filterData();
-                } else { showAlert("데이터 로드 실패", "오류", "❌"); }
-            } catch(e) { showAlert("연결 실패", "네트워크 오류", "📡"); } 
+                let rows = [];
+                const pageSize = 1000;
+                let from = 0;
+                while (true) {
+                    const { data, error } = await supabaseClient
+                        .from(RESERVATIONS_TABLE)
+                        .select('*, returnWay:returnMethod')
+                        .order('id', { ascending: true })
+                        .range(from, from + pageSize - 1);
+                    if (error) throw error;
+                    rows = rows.concat(data || []);
+                    if (!data || data.length < pageSize) break; // 더 가져올 데이터 없음
+                    from += pageSize;
+                }
+                allData = rows;
+                filterData();
+            } catch(e) { console.error(e); showAlert("연결 실패", "네트워크 오류", "📡"); }
             finally { toggleLoading(false); }
         }
 
@@ -574,7 +604,7 @@
                 let matchDate = true;
                 if(selectedDate) {
                     if(!item.startDate) matchDate = false;
-                    else matchDate = (selectedDate === item.startDate);
+                    else matchDate = (selectedDate === normalizeDateStr(item.startDate));
                 }
 
                 let matchVenue = true;
@@ -635,11 +665,11 @@
             });
 
             finalFiltered.sort((a, b) => {
-                 if (!a.orderTime || !b.orderTime) return b.row - a.row;
+                 if (!a.orderTime || !b.orderTime) return b.id - a.id;
                  const timeA = new Date(a.orderTime).getTime();
                  const timeB = new Date(b.orderTime).getTime();
                  if(timeA !== timeB) return timeB - timeA;
-                 return b.row - a.row; 
+                 return b.id - a.id; 
             });
 
             document.getElementById('btn-venue-rem').innerText = `남은 인원 ${venueRem}`;
@@ -746,8 +776,8 @@
                     ? "bg-emerald-50 text-emerald-600 border-emerald-200" 
                     : "bg-slate-100 text-slate-600 border-slate-200";
 
-                const start = (item.startDate || '').substring(5).replace('-','.');
-                const end = (item.endDate || '').substring(5).replace('-','.');
+                const start = normalizeDateStr(item.startDate).substring(5).replace('-','.');
+                const end = normalizeDateStr(item.endDate).substring(5).replace('-','.');
                 const clean = t => (t||'').replace(/수령|반납/g, '').trim();
                 const method = `${clean(item.delivery)}➔${clean(item.returnWay)}`;
                 const time = formatTime(item.orderTime);
@@ -797,7 +827,7 @@
 
         function openModal(item) {
             const root = document.getElementById('modal-root');
-            document.getElementById('edit-row').value = item.row;
+            document.getElementById('edit-row').value = item.id;
             document.getElementById('display-order-time').innerText = "접수: " + (formatTime(item.orderTime, true) || '-');
             document.getElementById('edit-name').value = item.name || '';
             document.getElementById('edit-phone').value = item.phone || '';
@@ -887,16 +917,18 @@
 
             const rowId = document.getElementById('edit-row').value;
 
-            const payload = {
-                type: 'update', row: rowId,
+            const localPayload = {
                 name: document.getElementById('edit-name').value, phone: document.getElementById('edit-phone').value,
-                startDate: document.getElementById('edit-start').value, endDate: document.getElementById('edit-end').value,
+                startDate: normalizeDateStr(document.getElementById('edit-start').value), endDate: normalizeDateStr(document.getElementById('edit-end').value),
                 delivery: document.getElementById('edit-delivery').value, returnWay: document.getElementById('edit-return-way').value,
-                status: document.getElementById('edit-status-val').value, tracking: document.getElementById('edit-tracking').value,
+                status: document.getElementById('edit-status-val').value, trackingNumber: document.getElementById('edit-tracking').value,
                 model: finalModel, memo: document.getElementById('edit-memo').value
             };
+            // DB 컬럼명이 returnMethod이므로 저장용 payload는 별도로 구성
+            const dbPayload = { ...localPayload, returnMethod: localPayload.returnWay };
+            delete dbPayload.returnWay;
 
-            const rowIndex = allData.findIndex(item => item.row == rowId);
+            const rowIndex = allData.findIndex(item => item.id == rowId);
             let backupItem = null;
             if(rowIndex !== -1) {
                 backupItem = { ...allData[rowIndex] }; 
@@ -905,8 +937,7 @@
             if(rowIndex !== -1) {
                 allData[rowIndex] = { 
                     ...allData[rowIndex], 
-                    ...payload, 
-                    trackingNumber: payload.tracking 
+                    ...localPayload
                 };
             }
 
@@ -916,7 +947,11 @@
             btn.innerText = originalText; btn.disabled = false;
 
             try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                const { error } = await supabaseClient
+                    .from(RESERVATIONS_TABLE)
+                    .update(dbPayload)
+                    .eq('id', rowId);
+                if (error) throw error;
             } catch(err) {
                 console.error("서버 저장 실패", err);
                 if(backupItem && rowIndex !== -1) {
@@ -930,16 +965,20 @@
         function confirmDelete() {
             showConfirm("이 예약을 정말 삭제할까요?", async () => {
                 const rowId = document.getElementById('edit-row').value;
-                const backupItem = allData.find(item => item.row == rowId);
+                const backupItem = allData.find(item => item.id == rowId);
                 
-                allData = allData.filter(item => item.row != rowId);
+                allData = allData.filter(item => item.id != rowId);
                 
                 filterData();
                 showAlert("예약이 임시 삭제되었습니다.", "완료", "🗑️");
                 closeModal();
 
                 try {
-                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'delete', row: rowId }) });
+                    const { error } = await supabaseClient
+                        .from(RESERVATIONS_TABLE)
+                        .update({ status: '취소' })
+                        .eq('id', rowId);
+                    if (error) throw error;
                 } catch(err) {
                     console.error("삭제 실패", err);
                     if (backupItem) {
