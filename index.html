@@ -589,6 +589,24 @@
             filterData();
         }
 
+        // 수령 위치 스마트 매핑 매칭 함수 (필터링/카운트 공통 사용)
+        function matchesLocFilter(item, locFilter) {
+            if (locFilter === 'all') return true;
+            const targetStr = (item.delivery || '') + ' ' + (item.address || '') + ' ' + (item.scheduleName || '');
+
+            if (locFilter === '확인필요') {
+                // 모든 지정된 키워드 중 하나라도 매칭되면 '확인필요'에 포함되지 않음
+                let matchedAny = false;
+                Object.values(LOC_MAP).forEach(keywords => {
+                    if (keywords.some(kw => targetStr.includes(kw))) matchedAny = true;
+                });
+                return !matchedAny;
+            }
+
+            const keywords = LOC_MAP[locFilter] || [locFilter];
+            return keywords.some(kw => targetStr.includes(kw));
+        }
+
         function filterData() {
             const query = document.getElementById('search-input').value.toLowerCase();
             let venueRem = 0, venuePick = 0;
@@ -611,10 +629,20 @@
                 const delivery = item.delivery || '';
                 if(!delivery.includes('공연') && !delivery.includes('현장')) matchVenue = false;
 
-                return matchQuery && matchDate && matchVenue;
+                // 진행 상태가 취소 또는 반납완료인 건은 리스트에서 제외
+                const matchStatus = !(item.status === '취소' || item.status === '반납완료');
+
+                // 변경신청/취소/연장 등 실제 기기 수령이 아닌 서비스 요청 건은 리스트에서 제외
+                const SERVICE_TYPE_KEYWORDS = ['변경신청', '취소', '연장'];
+                const rawModelStr = item.model || '';
+                const matchNotServiceType = !SERVICE_TYPE_KEYWORDS.some(kw => rawModelStr.includes(kw));
+
+                return matchQuery && matchDate && matchVenue && matchStatus && matchNotServiceType;
             });
 
-            updateModelButtonCounts(baseFiltered);
+            // 모델 수량 뱃지는 현재 선택된 장소 필터를 반영해서 계산
+            const locScopedForModelCount = baseFiltered.filter(item => matchesLocFilter(item, currentLocFilter));
+            updateModelButtonCounts(locScopedForModelCount);
             updateLocButtonCounts(baseFiltered);
 
             const finalFiltered = baseFiltered.filter(item => {
@@ -632,26 +660,7 @@
                 }
 
                 // 수령 위치 스마트 매핑 필터 검사
-                let matchLoc = true;
-                if (currentLocFilter !== 'all') {
-                    const targetStr = (item.delivery || '') + ' ' + (item.address || '') + ' ' + (item.scheduleName || '');
-                    
-                    if (currentLocFilter === '확인필요') {
-                        // 모든 지정된 키워드 중 하나라도 매칭되면 '확인필요'에 포함되지 않음
-                        let matchedAny = false;
-                        Object.values(LOC_MAP).forEach(keywords => {
-                            if (keywords.some(kw => targetStr.includes(kw))) {
-                                matchedAny = true;
-                            }
-                        });
-                        if (matchedAny) matchLoc = false;
-                    } else {
-                        const keywords = LOC_MAP[currentLocFilter] || [currentLocFilter];
-                        if (!keywords.some(kw => targetStr.includes(kw))) {
-                            matchLoc = false;
-                        }
-                    }
-                }
+                const matchLoc = matchesLocFilter(item, currentLocFilter);
                 
                 const isAssigned = /\d$/.test(rawModelNoBat);
                 if (matchModel && matchLoc) {
@@ -782,6 +791,9 @@
                 const method = `${clean(item.delivery)}➔${clean(item.returnWay)}`;
                 const time = formatTime(item.orderTime);
                 const lastPhone = item.phone ? item.phone.substring(item.phone.length-4) : '';
+                const newBadge = item.status === '예약신청' 
+                    ? '<span class="ml-0.5 px-1 py-0.5 rounded-[4px] bg-blue-50 text-blue-600 border border-blue-200 text-[9px] font-black leading-none">신규</span>' 
+                    : '';
 
                 const scheduleHtml = item.scheduleName ? 
                     `<div class="text-[12px] font-bold text-indigo-500 mt-1 mb-1 pl-0.5 truncate flex items-center gap-1">
@@ -801,6 +813,7 @@
                                 <span class="${badgeClass} px-1.5 py-0.5 rounded-[5px] font-extrabold text-[12px] border">${displayModel || '미정'}</span>
                                 <span class="text-[16px] font-black text-slate-900 truncate tracking-tight">${item.name}</span>
                                 <span class="text-[13px] font-bold text-slate-400 font-mono pt-[1px]">${lastPhone}</span>
+                                ${newBadge}
                                 ${battery}
                             </div>
                             ${scheduleHtml}
