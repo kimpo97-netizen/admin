@@ -161,6 +161,23 @@
 </head>
 <body class="max-w-md mx-auto min-h-screen relative pb-safe">
 
+    <!-- 로그인 (예약 개인정보 보호) -->
+    <div id="login-gate" style="position:fixed; inset:0; z-index:9999; background:#F8FAFC; display:flex; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; border-radius:24px; padding:36px 28px; width:100%; max-width:380px; box-shadow:0 20px 60px -15px rgba(59,130,246,0.25);">
+            <div style="text-align:center; margin-bottom:24px;">
+                <div style="font-size:40px; margin-bottom:8px;">🎫</div>
+                <h1 style="font-size:20px; font-weight:800; color:#0F172A; margin:0;">공연장 수령 관리</h1>
+                <p style="font-size:13px; color:#64748B; margin:6px 0 0;">관리자 비밀번호로 로그인하세요</p>
+            </div>
+            <input id="login-pw" type="password" placeholder="비밀번호" autocomplete="current-password"
+                onkeydown="if(event.key==='Enter')doLogin()"
+                style="width:100%; padding:13px 14px; border:1px solid #E2E8F0; border-radius:12px; font-size:16px; margin-bottom:14px; box-sizing:border-box;">
+            <button onclick="doLogin()" id="login-btn"
+                style="width:100%; padding:14px; background:#3B82F6; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer;">로그인</button>
+            <p id="login-err" style="color:#dc2626; font-size:13px; text-align:center; margin:12px 0 0; min-height:18px;"></p>
+        </div>
+    </div>
+
     <!-- 1. 헤더 영역 -->
     <header class="sticky top-0 z-30 header-fixed pt-safe bg-white/95">
         <div class="px-4 pt-4 pb-3">
@@ -386,6 +403,22 @@
         );
         const RESERVATIONS_TABLE = 'reservations';
 
+        // 예약 정보(이름·연락처·주소)는 로그인한 관리자만 볼 수 있다 (Supabase RLS).
+        const ADMIN_EMAIL = "kimpo97@naver.com"; // PC.html의 ADMIN_EMAIL과 동일
+        async function doLogin() {
+            const pw = document.getElementById('login-pw').value;
+            const errEl = document.getElementById('login-err');
+            const btn = document.getElementById('login-btn');
+            errEl.innerText = '';
+            if (!pw) { errEl.innerText = '비밀번호를 입력하세요.'; return; }
+            btn.disabled = true; btn.innerText = '로그인 중...';
+            const { error } = await supabaseClient.auth.signInWithPassword({ email: ADMIN_EMAIL, password: pw });
+            btn.disabled = false; btn.innerText = '로그인';
+            if (error) { errEl.innerText = '비밀번호가 올바르지 않습니다.'; return; }
+            document.getElementById('login-gate').style.display = 'none';
+            fetchData();
+        }
+
         const MODEL_LIST = ['23U', '24U', '25U', '26U', '17P', '17PM', '백업', '연장'];
         
         // 수령 위치(주소/공연장) 다중 키워드 매핑
@@ -443,10 +476,14 @@
             return `${y}-${mo}-${d}`;
         }
 
-        window.onload = () => {
+        window.onload = async () => {
             selectedDate = getTodayKST();
             updateActiveDateUI();
-            fetchData();
+            const { data } = await supabaseClient.auth.getSession();
+            if (data && data.session) {
+                document.getElementById('login-gate').style.display = 'none';
+                fetchData();
+            }
         };
 
         function updateActiveDateUI() {
